@@ -44,6 +44,9 @@ using namespace mrpt::config;
 using namespace mrpt::utils;
 #endif
 
+#define DO_PRAGMA(x) _Pragma (#x)
+#define TODO(x) DO_PRAGMA(message ("TODO - " #x))
+
 #include <mrpt/maps/COccupancyGridMap2D.h>
 #include <mrpt/maps/CMultiMetricMap.h>
 using mrpt::maps::CMultiMetricMap;
@@ -114,6 +117,11 @@ bool MapServer::mapCallback(
 	ROS_INFO("mapCallback: service requested!\n");
 	res = resp_ros_;
 	return true;
+}
+
+void MapServer::objectDetectionCallback(tuw_object_msgs::ObjectDetection &obj)
+{
+  MRPT_TODO("implement");
 }
 
 void MapServer::publishMap()

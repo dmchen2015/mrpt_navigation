@@ -49,6 +49,8 @@ using namespace mrpt::utils;
 #endif
 
 #include <mrpt/maps/CMultiMetricMap.h>
+#include <tuw_object_msgs/ObjectDetection.h>
+#include <mrpt/core/common.h>
 using mrpt::maps::CMultiMetricMap;
 
 class MapServer
@@ -67,12 +69,14 @@ class MapServer
 	bool debug_{true};
 	ros::Publisher pub_map_ros_;
 	ros::Publisher pub_metadata_;
+  ros::Subscriber object_detections_;
 	ros::ServiceServer service_map_;
 	nav_msgs::GetMap::Response resp_ros_;
 	boost::shared_ptr<CMultiMetricMap> metric_map_;
 	void publishMap();
 	bool mapCallback(
 		nav_msgs::GetMap::Request& req, nav_msgs::GetMap::Response& res);
+  void objectDetectionCallback(tuw_object_msgs::ObjectDetection &obj);
 };
 
 #endif  // MRPT_MAP_SERVER_NODE_H

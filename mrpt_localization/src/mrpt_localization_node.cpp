@@ -251,7 +251,7 @@ void PFLocalizationNode::callbackBeacon(
 		CObservation::Ptr obs = CObservation::Ptr(beacon);
 		sf->insert(obs);
 		observation(sf, odometry);
-		if (param()->gui_mrpt) show3DDebug(sf);
+    if (param()->gui_mrpt) show3DDebug(sf);
 	}
 }
 
@@ -516,7 +516,7 @@ void PFLocalizationNode::publishParticles()
 		poseArray.poses.resize(pdf_.particlesCount());
 		for (size_t i = 0; i < pdf_.particlesCount(); i++)
 		{
-			mrpt::poses::CPose2D p = pdf_.getParticlePose(i);
+      mrpt::poses::CPose2D p = mrpt::poses::CPose2D(pdf_.getParticlePose(i));
 			mrpt_bridge::convert(p, poseArray.poses[i]);
 		}
 		mrpt::poses::CPose2D p;
