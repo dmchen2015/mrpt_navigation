@@ -57,6 +57,14 @@ target_link_libraries(map_server_node
   ${catkin_LIBRARIES}
 )
 
+add_executable(object_listener_node src/object_listener_node.cpp)
+
+target_link_libraries(object_listener_node
+  ${MRPT_LIBS}
+  ${catkin_LIBRARIES}
+  ${boost_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############
@@ -70,6 +78,13 @@ install(TARGETS map_server_node
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
+
+install(TARGETS object_listener_node
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
 
 # Mark other files for installation (e.g. launch and bag files, etc.)
 install(DIRECTORY

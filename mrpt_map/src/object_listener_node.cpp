@@ -32,7 +32,7 @@ void ObjectListener::init()
   sub_map_ = n_.subscribe("map", 1, &ObjectListener::callbackMap, this);
   sub_object_detections_ = n_.subscribe("object_detections", 1, &ObjectListener::callbackObjectDetections, this);
   metric_map_ = boost::make_shared<CMultiMetricMap>();
-  metric_map_->m_gridMaps.push_back(new mrpt::maps::COccupancyGridMap2D());
+  //metric_map_->m_gridMaps.push_back(new mrpt::maps::COccupancyGridMap2D());
   //metric_map_->m_beaconMap.push_back(new mrpt::maps::CBeaconMap());
 }
 
