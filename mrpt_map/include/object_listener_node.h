@@ -14,15 +14,15 @@
  * @brief The ObjectListener class
  */
 
-class ObjectListener
+class ObjectListenerNode
 {
   public:
-    ObjectListener(ros::NodeHandle &n);
-    ~ObjectListener();
+    ObjectListenerNode(ros::NodeHandle &n);
+    ~ObjectListenerNode();
 
     void init();
-    void callbackMap(nav_msgs::OccupancyGrid &_msg);
-    void callbackObjectDetections(tuw_object_msgs::ObjectDetection &_msg);
+    void callbackMap(const nav_msgs::OccupancyGrid &_msg);
+    void callbackObjectDetections(const tuw_object_msgs::ObjectDetection &_msg);
 
   private:
     ros::NodeHandle n_;
@@ -30,6 +30,7 @@ class ObjectListener
     ros::Subscriber sub_map_;
     ros::Subscriber sub_object_detections_;
     std::ofstream map_file_;
+    std::string map_file_path_;
     boost::shared_ptr<mrpt::maps::CMultiMetricMap> metric_map_;
 };
 

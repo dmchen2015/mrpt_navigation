@@ -1,0 +1,12 @@
+<launch>
+
+  <node pkg="mrpt_map" type="object_listener_node" name="object_listener_node" output="screen">
+
+    <param name="frame_id" value="map"/>
+    <param name="frequency" value="1"/>
+    <!--<param name="ini_file" value="$(find mrpt_map)/tutorial/map.ini"/>-->
+    <param name="map_file" value="$(find mrpt_map)/tutorial/constructed_map.simplemap"/>
+
+  </node>
+
+</launch>
