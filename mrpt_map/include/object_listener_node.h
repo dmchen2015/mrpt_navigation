@@ -7,6 +7,7 @@
 #include <boost/filesystem.hpp>
 #include <mrpt/maps/CMultiMetricMap.h>
 #include <fstream>
+#include <string>
 
 /**
  * This class listens to objectdetections and inserts them into mrpt maps.
@@ -31,6 +32,7 @@ class ObjectListenerNode
     ros::Subscriber sub_object_detections_;
     std::ofstream map_file_;
     std::string map_file_path_;
+    std::string bitmap_file_path_;
     boost::shared_ptr<mrpt::maps::CMultiMetricMap> metric_map_;
 };
 
