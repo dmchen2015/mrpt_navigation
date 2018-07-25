@@ -8,6 +8,12 @@
 #include <mrpt/io/CFileOutputStream.h>
 
 
+#include <mrpt/opengl/COpenGLScene.h>
+#include <mrpt/opengl/CSetOfLines.h>
+#include <mrpt/opengl/CGridPlaneXY.h>
+#include <mrpt/opengl/CSphere.h>
+#include <mrpt/opengl/stock_objects.h>
+
 
 ObjectListenerNode::ObjectListenerNode(ros::NodeHandle& n) : n_(n)
 {}
@@ -41,6 +47,15 @@ void ObjectListenerNode::init()
     ROS_ERROR("specify a bitmap file destination and make sure the directory exists.");
   }
 
+  if (load_map_)
+  {
+    ROS_INFO("loading and displaying map.");
+  }
+  else
+  {
+    ROS_INFO("listening to objects which are stored in the provided map file.");
+  }
+
   map_file_.open(map_file_path_, std::fstream::out);
   if (!map_file_.is_open()){
     ROS_ERROR("cannot open file: %s, make sure the directory exists.", map_file_path_.c_str());
@@ -51,7 +66,7 @@ void ObjectListenerNode::init()
   }
 
   sub_map_ = n_.subscribe("map", 1, &ObjectListenerNode::callbackMap, this);
-  sub_object_detections_ = n_.subscribe("object_detections", 1, &ObjectListenerNode::callbackObjectDetections, this);
+  sub_object_detections_ = n_.subscribe("map_doors", 1, &ObjectListenerNode::callbackObjectDetections, this);
   metric_map_ = boost::make_shared<mrpt::maps::CMultiMetricMap>();
   mrpt::containers::deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> grid_map(mrpt::maps::COccupancyGridMap2D::Create());
   mrpt::containers::deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> beacon_map(mrpt::maps::CBeaconMap::Create());
@@ -77,7 +92,7 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
       const auto o_id = it->object.ids[0];
       mrpt::maps::CBearing::Ptr bear;
       auto &bearings = metric_map_->m_beaconMap->m_bearings;
-      const auto it_b = std::find_if(bearings.begin(),bearings.end(),
+      const std::vector<mrpt::maps::CBearing::Ptr>::iterator it_b = std::find_if(bearings.begin(),bearings.end(),
                                                        [&o_id] (const mrpt::maps::CBearing::Ptr &b)
                                                                   {
                                                                       return b->m_ID == o_id;
@@ -98,9 +113,48 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
 
       bear->m_fixed_pose.setFromValues(position.x, position.y, position.z,qeuler[2],qeuler[1],qeuler[0]);
       bear->m_ID = o_id;
-      metric_map_->m_beaconMap->m_bearings.push_back(bear);
+      bear->m_typePDF = mrpt::maps::CBearing::pdfNO;
+      if (it_b == bearings.end())
+      {
+        metric_map_->m_beaconMap->m_bearings.push_back(bear);
+      }
     }
   }
+}
+
+void ObjectListenerNode::display()
+{
+  MRPT_START
+
+  using namespace mrpt::opengl;
+  if (!window_)
+  {
+    window_ = mrpt::gui::CDisplayWindow3D::Create("Constructed Map",500,500);
+    window_->setCameraZoom(40);
+    window_->setCameraAzimuthDeg(-50);
+    window_->setCameraElevationDeg(70);
+  }
+  COpenGLScene::Ptr scene;
+  scene = mrpt::make_aligned_shared<COpenGLScene>();
+  mrpt::opengl::CGridPlaneXY::Ptr groundPlane =
+    mrpt::make_aligned_shared<mrpt::opengl::CGridPlaneXY>(
+      -200, 200, -200, 200, 0, 5);
+  groundPlane->setColor(0.4, 0.4, 0.4);
+  scene->insert(groundPlane);
+
+  mrpt::opengl::CSetOfObjects::Ptr objs =
+    mrpt::make_aligned_shared<
+      mrpt::opengl::CSetOfObjects>();
+  metric_map_->getAs3DObject(objs);
+  scene->insert(objs);
+
+  COpenGLScene::Ptr &scenePtr = window_->get3DSceneAndLock();
+  scenePtr = scene;
+  window_->unlockAccess3DScene();
+  window_->forceRepaint();
+  ROS_INFO("repainting scene");
+
+  MRPT_END
 }
 
 int main(int argc, char **argv)
@@ -110,10 +164,13 @@ int main(int argc, char **argv)
 
   ObjectListenerNode obj_listener_node(nh);
   obj_listener_node.init();
+  ros::Rate rate(2);
 
   while (ros::ok())
   {
-    ros::spin();
+    ros::spinOnce();
+    obj_listener_node.display();
+    rate.sleep();
   }
 
   ROS_INFO("Hello world!");

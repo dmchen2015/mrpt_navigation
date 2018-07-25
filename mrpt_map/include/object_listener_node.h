@@ -9,6 +9,8 @@
 #include <fstream>
 #include <string>
 #include <memory>
+#include <mrpt/opengl/COpenGLScene.h>
+#include <mrpt/gui/CDisplayWindow3D.h>
 
 /**
  * This class listens to objectdetections and inserts them into mrpt maps.
@@ -25,6 +27,7 @@ class ObjectListenerNode
     void init();
     void callbackMap(const nav_msgs::OccupancyGrid &_msg);
     void callbackObjectDetections(const tuw_object_msgs::ObjectDetection &_msg);
+    void display();
 
   private:
     ros::NodeHandle n_;
@@ -36,6 +39,9 @@ class ObjectListenerNode
     std::string bitmap_file_path_;
     boost::shared_ptr<mrpt::maps::CMultiMetricMap> metric_map_;
     bool load_map_;
+
+    //opengl stuff
+    mrpt::gui::CDisplayWindow3D::Ptr window_;
 };
 
 #endif // OBJECT_LISTENER_NODE_H
