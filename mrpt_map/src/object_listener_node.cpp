@@ -8,6 +8,7 @@
 #include <mrpt/io/CFileOutputStream.h>
 
 
+
 ObjectListenerNode::ObjectListenerNode(ros::NodeHandle& n) : n_(n)
 {}
 
@@ -23,7 +24,7 @@ void ObjectListenerNode::init()
 //  ROS_INFO("ini_file: %s", ini_file.c_str());
   n_param_.param<std::string>(std::string("simplemap_file"), map_file_path_, std::string(""));
   n_param_.param<std::string>(std::string("bitmap_file"), bitmap_file_path_, std::string(""));
-
+  n_param_.param<bool>(std::string("load_map"), load_map_, false);
   ROS_INFO("map_file: %s", map_file_path_.c_str());
   ROS_INFO("bitmap_file: %s", bitmap_file_path_.c_str());
 
@@ -73,7 +74,31 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
   {
     if (it->object.shape == tuw_object_msgs::Object::SHAPE_DOOR)
     {
-      mrpt::maps::CBearing bear;
+      const auto o_id = it->object.ids[0];
+      mrpt::maps::CBearing::Ptr bear;
+      auto &bearings = metric_map_->m_beaconMap->m_bearings;
+      const auto it_b = std::find_if(bearings.begin(),bearings.end(),
+                                                       [&o_id] (const mrpt::maps::CBearing::Ptr &b)
+                                                                  {
+                                                                      return b->m_ID == o_id;
+                                                                  });
+      if (it_b != bearings.end())
+      {
+        bear = *it_b; // update
+      }
+      else
+      {
+        bear = mrpt::maps::CBearing::Create(); //create
+      }
+      const auto &position = it->object.pose.position;
+      const auto &orientation = it->object.pose.orientation;
+
+      Eigen::Quaterniond q(orientation.w,orientation.x,orientation.y,orientation.z);
+      auto qeuler = q.toRotationMatrix().eulerAngles(0,1,2); //roll, pitch, yaw
+
+      bear->m_fixed_pose.setFromValues(position.x, position.y, position.z,qeuler[2],qeuler[1],qeuler[0]);
+      bear->m_ID = o_id;
+      metric_map_->m_beaconMap->m_bearings.push_back(bear);
     }
   }
 }
