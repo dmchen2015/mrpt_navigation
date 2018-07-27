@@ -1,7 +1,7 @@
 #include <object_listener_node.h>
 #include <mrpt_bridge/map.h>
 #include <mrpt/maps/CBearing.h>
-#include <mrpt/maps/CBeaconMap.h>
+#include <mrpt/maps/CBearingMap.h>
 #include <mrpt/maps/CMultiMetricMap.h>
 #include <mrpt/containers/deepcopy_poly_ptr.h>
 #include <mrpt/system/filesystem.h>
@@ -91,13 +91,21 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
     {
       const auto o_id = it->object.ids[0];
       mrpt::maps::CBearing::Ptr bear;
-      auto &bearings = metric_map_->m_beaconMap->m_bearings;
-      const std::vector<mrpt::maps::CBearing::Ptr>::iterator it_b = std::find_if(bearings.begin(),bearings.end(),
-                                                       [&o_id] (const mrpt::maps::CBearing::Ptr &b)
-                                                                  {
-                                                                      return b->m_ID == o_id;
-                                                                  });
-      if (it_b != bearings.end())
+      mrpt::maps::CBearingMap::Ptr bearings = metric_map_->m_bearingMap;
+//      std::vector<mrpt::maps::CBearing::Ptr>::iterator it_b = std::find_if(bearings->begin(),bearings->end(),
+//                                                       [&o_id] (const mrpt::maps::CBearing::Ptr b)
+//                                                                  {
+//                                                                      return b->m_ID == o_id;
+//                                                                  });
+      auto it_b = bearings->begin();
+      for (; it_b != bearings->end(); ++it_b)
+      {
+        if ((*it_b)->m_ID == o_id)
+        {
+          break;
+        }
+      }
+      if (it_b != bearings->end())
       {
         bear = *it_b; // update
       }
@@ -114,9 +122,9 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
       bear->m_fixed_pose.setFromValues(position.x, position.y, position.z,qeuler[2],qeuler[1],qeuler[0]);
       bear->m_ID = o_id;
       bear->m_typePDF = mrpt::maps::CBearing::pdfNO;
-      if (it_b == bearings.end())
+      if (it_b == bearings->end())
       {
-        metric_map_->m_beaconMap->m_bearings.push_back(bear);
+        bearings->push_back(bear);
       }
     }
   }
