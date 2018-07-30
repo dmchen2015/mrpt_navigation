@@ -69,9 +69,9 @@ void ObjectListenerNode::init()
   sub_object_detections_ = n_.subscribe("map_doors", 1, &ObjectListenerNode::callbackObjectDetections, this);
   metric_map_ = boost::make_shared<mrpt::maps::CMultiMetricMap>();
   mrpt::containers::deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> grid_map(mrpt::maps::COccupancyGridMap2D::Create());
-  mrpt::containers::deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> beacon_map(mrpt::maps::CBeaconMap::Create());
+  mrpt::containers::deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> bearing_map(mrpt::maps::CBearingMap::Create());
   metric_map_->m_gridMaps.push_back(grid_map);
-  metric_map_->maps.push_back(beacon_map);
+  metric_map_->maps.push_back(bearing_map);
 }
 
 void ObjectListenerNode::callbackMap(const nav_msgs::OccupancyGrid &_msg)
