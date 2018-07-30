@@ -18,6 +18,16 @@
  * @brief The ObjectListener class
  */
 
+class ObjectListenerNodeParams
+{
+   public:
+    bool load_map_;
+    bool update_map_;
+    std::string map_file_path_;
+    std::string bitmap_file_path_;
+    std::string ini_file_path_;
+};
+
 class ObjectListenerNode
 {
   public:
@@ -34,11 +44,8 @@ class ObjectListenerNode
     ros::NodeHandle n_param_{"~"};
     ros::Subscriber sub_map_;
     ros::Subscriber sub_object_detections_;
-    std::ofstream map_file_;
-    std::string map_file_path_;
-    std::string bitmap_file_path_;
     boost::shared_ptr<mrpt::maps::CMultiMetricMap> metric_map_;
-    bool load_map_;
+    ObjectListenerNodeParams params_;
 
     //opengl stuff
     mrpt::gui::CDisplayWindow3D::Ptr window_;
