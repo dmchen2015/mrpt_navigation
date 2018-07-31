@@ -55,6 +55,7 @@ using mrpt::obs::CObservationOdometry;
 #include "mrpt_localization/MotionConfig.h"
 #include "mrpt_localization/mrpt_localization.h"
 #include "mrpt_msgs/ObservationRangeBeacon.h"
+#include "mrpt_msgs/ObservationRangeBearing.h"
 
 /// ROS Node
 class PFLocalizationNode : public PFLocalization
@@ -102,6 +103,7 @@ class PFLocalizationNode : public PFLocalization
 	void loop();
 	void callbackLaser(const sensor_msgs::LaserScan&);
 	void callbackBeacon(const mrpt_msgs::ObservationRangeBeacon&);
+  void callbackBearing(const mrpt_msgs::ObservationRangeBearing&);
 	void callbackRobotPose(const geometry_msgs::PoseWithCovarianceStamped&);
 	void odometryForCallback(
 		CObservationOdometry::Ptr&, const std_msgs::Header&);
@@ -132,6 +134,7 @@ class PFLocalizationNode : public PFLocalization
 	tf::TransformBroadcaster tf_broadcaster_;
 	std::map<std::string, mrpt::poses::CPose3D> laser_poses_;
 	std::map<std::string, mrpt::poses::CPose3D> beacon_poses_;
+  std::map<std::string, mrpt::poses::CPose3D> bearing_poses_;
 
 	// methods
 	Parameters* param();
