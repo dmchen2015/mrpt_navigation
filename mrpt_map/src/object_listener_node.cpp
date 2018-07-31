@@ -7,7 +7,7 @@
 #include <mrpt/system/filesystem.h>
 
 #include <mrpt/io/CFileOutputStream.h>
-#include <mrpt/io/CFileGZInputStream.h>
+#include <mrpt/io/CFileInputStream.h>
 
 #include <mrpt/config/CConfigFile.h>
 
@@ -39,9 +39,8 @@ void ObjectListenerNode::init()
   if (params_.load_map_)
   {
     ASSERT_FILE_EXISTS_(params_.ini_file_path_);
+    ASSERT_FILE_EXISTS_(params_.map_file_path_);
   }
-  ASSERT_FILE_EXISTS_(params_.map_file_path_);
-  ASSERT_FILE_EXISTS_(params_.bitmap_file_path_);
 
   if (params_.load_map_)
   {
@@ -57,42 +56,49 @@ void ObjectListenerNode::init()
     sub_map_ = n_.subscribe("map", 1, &ObjectListenerNode::callbackMap, this);
     sub_object_detections_ = n_.subscribe("map_doors", 1, &ObjectListenerNode::callbackObjectDetections, this);
   }
-  metric_map_ = boost::make_shared<mrpt::maps::CMultiMetricMap>();
   if (!params_.load_map_)
   {
     mrpt::containers::deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> grid_map(mrpt::maps::COccupancyGridMap2D::Create());
     mrpt::containers::deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> bearing_map(mrpt::maps::CBearingMap::Create());
-    metric_map_->m_gridMaps.push_back(grid_map);
-    metric_map_->maps.push_back(bearing_map);
+    metric_map_.m_gridMaps.push_back(grid_map);
+    metric_map_.maps.push_back(bearing_map);
   }
   else
   {
     mrpt::config::CConfigFile ini_file;
     ini_file.setFileName(params_.ini_file_path_);
-    if (!mrpt_bridge::MapHdl::loadMap(metric_map_, ini_file, params_.map_file_path_, "metricMap"))
-    {
-      ROS_ERROR("map could not be loaded.");
-    }
-//    CFileGZInputStream f(params_.map_file_path_);
-//#if MRPT_VERSION >= 0x199
-//    mrpt::serialization::archiveFrom(f) >> metric_map_;
-//#else
-//    f >> metric_map_;
-//#endif
-//    ASSERTMSG_(
-//      metric_map_.size() > 0,
-//      "Metric map was aparently loaded OK, but it is empty!");
+    MRPT_TODO("use a simplemap here");
+//    if (!mrpt_bridge::MapHdl::loadMap(metric_map_, ini_file, params_.map_file_path_, "metricMap"))
+//    {
+//      ROS_ERROR("map could not be loaded.");
+//    }
+
+    CFileInputStream f(params_.map_file_path_);
+    ROS_INFO("serialization process begin.");
+#if MRPT_VERSION >= 0x199
+    mrpt::serialization::archiveFrom(f) >> metric_map_;
+#else
+    f >> metric_map_;
+#endif
+    ROS_INFO("serialization process end, map loaded.");
+    ASSERTMSG_(
+      std::distance(metric_map_.begin(), metric_map_.end()) > 0,
+      "Metric map was aparently loaded OK, but it is empty!");
 
   }
 }
 
 void ObjectListenerNode::callbackMap(const nav_msgs::OccupancyGrid &_msg)
 {
-  ASSERT_(metric_map_->m_gridMaps.size() == 1);
-  mrpt_bridge::convert(_msg, *metric_map_->m_gridMaps[0]);
+  ASSERT_(metric_map_.m_gridMaps.size() == 1);
+  mrpt_bridge::convert(_msg, *metric_map_.m_gridMaps[0]);
+  metric_map_.m_gridMaps[0]->saveAsBitmapFile(params_.bitmap_file_path_);
+}
+
+void ObjectListenerNode::saveMap()
+{
   mrpt::io::CFileOutputStream fileOut(params_.map_file_path_);
-  mrpt::serialization::archiveFrom(fileOut) << *metric_map_;
-  metric_map_->m_gridMaps[0]->saveAsBitmapFile(params_.bitmap_file_path_);
+  mrpt::serialization::archiveFrom(fileOut) << metric_map_;
 }
 
 void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectDetection &_msg)
@@ -103,7 +109,7 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
     {
       const auto o_id = it->object.ids[0];
       mrpt::maps::CBearing::Ptr bear;
-      mrpt::maps::CBearingMap::Ptr bearings = metric_map_->m_bearingMap;
+      mrpt::maps::CBearingMap::Ptr bearings = metric_map_.m_bearingMap;
       if (!bearings && params_.update_map_)
       {
         ROS_ERROR("attempting to update multimetric map without initializing a bearingmap first!");
@@ -141,11 +147,11 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
 void ObjectListenerNode::display()
 {
   MRPT_START
-  if (!metric_map_->m_bearingMap)
+  if (!metric_map_.m_bearingMap)
   {
     std::cout << "no bearingmap" << std::endl;
   }
-  if (!metric_map_->m_gridMaps[0])
+  if (!metric_map_.m_gridMaps[0])
   {
     std::cout << "no gridmaps" << std::endl;
   }
@@ -168,7 +174,7 @@ void ObjectListenerNode::display()
   mrpt::opengl::CSetOfObjects::Ptr objs =
     mrpt::make_aligned_shared<
       mrpt::opengl::CSetOfObjects>();
-  metric_map_->getAs3DObject(objs);
+  metric_map_.getAs3DObject(objs);
   scene->insert(objs);
 
   COpenGLScene::Ptr &scenePtr = window_->get3DSceneAndLock();
@@ -193,6 +199,7 @@ int main(int argc, char **argv)
   {
     ros::spinOnce();
     obj_listener_node.display();
+    obj_listener_node.saveMap();
     rate.sleep();
   }
 

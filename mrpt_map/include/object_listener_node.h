@@ -38,13 +38,14 @@ class ObjectListenerNode
     void callbackMap(const nav_msgs::OccupancyGrid &_msg);
     void callbackObjectDetections(const tuw_object_msgs::ObjectDetection &_msg);
     void display();
+    void saveMap();
 
   private:
     ros::NodeHandle n_;
     ros::NodeHandle n_param_{"~"};
     ros::Subscriber sub_map_;
     ros::Subscriber sub_object_detections_;
-    boost::shared_ptr<mrpt::maps::CMultiMetricMap> metric_map_;
+    mrpt::maps::CMultiMetricMap metric_map_;
     ObjectListenerNodeParams params_;
 
     //opengl stuff
