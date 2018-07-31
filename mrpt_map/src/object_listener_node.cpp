@@ -109,11 +109,11 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
     {
       const auto o_id = it->object.ids[0];
       mrpt::maps::CBearing::Ptr bear;
-      mrpt::maps::CBearingMap::Ptr bearings = metric_map_.m_bearingMap;
-      if (!bearings && params_.update_map_)
+      if (!metric_map_.m_bearingMap && params_.update_map_)
       {
-        ROS_ERROR("attempting to update multimetric map without initializing a bearingmap first!");
+        metric_map_.maps.push_back(mrpt::containers::deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr>(mrpt::maps::CBearingMap::Create()));
       }
+      mrpt::maps::CBearingMap::Ptr bearings = metric_map_.m_bearingMap;
       std::vector<mrpt::maps::CBearing::Ptr>::iterator it_b = std::find_if(bearings->begin(),bearings->end(),
                                                        [&o_id] (const mrpt::maps::CBearing::Ptr b)
                                                                   {
@@ -202,6 +202,4 @@ int main(int argc, char **argv)
     obj_listener_node.saveMap();
     rate.sleep();
   }
-
-  ROS_INFO("Hello world!");
 }
