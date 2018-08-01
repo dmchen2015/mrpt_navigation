@@ -9,6 +9,8 @@
 #include <mrpt/io/CFileOutputStream.h>
 #include <mrpt/io/CFileInputStream.h>
 
+#include <mrpt/math/types_math.h>
+
 #include <mrpt/config/CConfigFile.h>
 
 #include <mrpt/opengl/COpenGLScene.h>
@@ -133,9 +135,27 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
       Eigen::Quaterniond q(orientation.w,orientation.x,orientation.y,orientation.z);
       auto qeuler = q.toRotationMatrix().eulerAngles(0,1,2); //roll, pitch, yaw
 
-      bear->m_fixed_pose.setFromValues(position.x, position.y, position.z,qeuler[2],qeuler[1],qeuler[0]);
       bear->m_ID = o_id;
       bear->m_typePDF = mrpt::maps::CBearing::pdfNO;
+
+      mrpt::math::TPose3D p;
+      {
+        p.roll = qeuler[0];
+        p.pitch = qeuler[1];
+        p.yaw = qeuler[2];
+        p.x = position.x;
+        p.y = position.y;
+        p.z = position.z;
+      }
+
+      MRPT_TODO("correct insert mechanism");
+      bear->m_locationNoPDF.m_particles.resize(100);
+      for (auto it=bear->m_locationNoPDF.m_particles.begin();
+           it != bear->m_locationNoPDF.m_particles.end(); ++it)
+      {
+        it->d = mrpt::math::TPose3D(p);
+      }
+
       if (it_b == bearings->end())
       {
         bearings->push_back(bear);
