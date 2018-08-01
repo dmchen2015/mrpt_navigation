@@ -40,6 +40,9 @@
 #include <mrpt/opengl/CEllipsoid.h>
 #include <mrpt/opengl/CPointCloud.h>
 
+MRPT_TODO("Experimental");
+#include <mrpt/io/CFileInputStream.h>
+
 #include <thread>
 #include <chrono>
 
@@ -156,13 +159,29 @@ void PFLocalization::init()
 
 	configureFilter(ini_file);
 	// Metric map options:
-
-	if (!mrpt_bridge::MapHdl::loadMap(
-			metric_map_, ini_file, param_->map_file, "metricMap",
-			param_->debug))
-	{
-		waitForMap();
-	}
+  MRPT_TODO("Experimental");
+  if (!param_->experimental)
+  {
+    if (!mrpt_bridge::MapHdl::loadMap(
+        metric_map_, ini_file, param_->map_file, "metricMap",
+        param_->debug))
+    {
+      waitForMap();
+    }
+  }
+  else
+  {
+    waitForMap();
+    CFileInputStream f(param_->map_file);
+#if MRPT_VERSION >= 0x199
+    mrpt::serialization::archiveFrom(f) >> metric_map_;
+#else
+    f >> metric_map_;
+#endif
+    ASSERTMSG_(
+      std::distance(metric_map_.begin(), metric_map_.end()) > 0,
+      "Metric map was aparently loaded OK, but it is empty!");
+  }
 
 	initial_particle_count_ = *particles_count.begin();
 

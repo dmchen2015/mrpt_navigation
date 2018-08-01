@@ -58,6 +58,7 @@ class PFLocalization : public PFLocalizationCore
 		Parameters(PFLocalization* p);
 		bool debug;
 		bool gui_mrpt;
+    bool experimental;
 		std::string ini_file;
 		std::string map_file;
 		std::string sensor_sources;  //!< A list of topics (e.g. laser scanners)

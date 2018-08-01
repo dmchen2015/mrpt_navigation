@@ -5,8 +5,8 @@
   <include file="$(find mrpt_rawlog)/launch/demo_rosbag.launch" />
 
   <node pkg="mrpt_localization" type="mrpt_localization_node" name="mrpt_localization_node" output="screen">
-    <param name="ini_file" value="$(find mrpt_localization)/tutorial/pf-localization.ini"/> 
-    <param name="map_file" value="$(find mrpt_localization)/tutorial/map.simplemap"/> 
+    <param name="ini_file" value="$(find mrpt_localization)/tutorial/pf-localization-bearing.ini"/>
+    <param name="map_file" value="$(find mrpt_map)/tutorial/constructed_map.map"/>
     <param name="odom_frame_id" value="r1/odom"/> 
     <param name="global_frame_id" value="/map"/> 
     <param name="base_frame_id" value="r1/base_link"/> 
@@ -15,8 +15,8 @@
     <param name="tf_prefix" value=""/> 
     <param name="debug" value="true"/>
     <param name="gui_mrpt" value="true"/> 
-    <param name="sensor_sources" value="r1/front_laser/scan"/>
-    <param name="experimental" value="false"/>
+    <param name="sensor_sources" value="r1/front_laser/scan,/bearings"/>
+    <param name="experimental" value="true"/>
     <remap from="particlecloud" to="r1/particlecloud"/>
   </node>
 

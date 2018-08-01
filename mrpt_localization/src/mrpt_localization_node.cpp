@@ -118,7 +118,7 @@ void PFLocalizationNode::init()
 			sub_sensors_[i] = nh_.subscribe(
 				sources[i], 1, &PFLocalizationNode::callbackBeacon, this);
 		}
-    else if (sources[i].find("beacon") != std::string::npos)
+    else if (sources[i].find("bearing") != std::string::npos)
     {
       sub_sensors_[i] = nh_.subscribe(
         sources[i], 1, &PFLocalizationNode::callbackBearing, this);
