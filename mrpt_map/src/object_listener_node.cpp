@@ -1,5 +1,6 @@
 #include <object_listener_node.h>
 #include <mrpt_bridge/map.h>
+#include <mrpt_bridge/pose.h>
 #include <mrpt/maps/CBearing.h>
 #include <mrpt/maps/CBearingMap.h>
 #include <mrpt/maps/CMultiMetricMap.h>
@@ -9,6 +10,7 @@
 #include <mrpt/io/CFileOutputStream.h>
 #include <mrpt/io/CFileInputStream.h>
 
+#include <mrpt/obs/CObservationBearingRange.h>
 #include <mrpt/math/types_math.h>
 
 #include <mrpt/config/CConfigFile.h>
@@ -105,63 +107,46 @@ void ObjectListenerNode::saveMap()
 
 void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectDetection &_msg)
 {
+  using namespace mrpt::obs;
+  using namespace mrpt::maps;
+  using namespace mrpt::containers;
+  using namespace mrpt::poses;
+
+  CObservationBearingRange obs;
+  MRPT_TODO("map frame")
+  CPose3D sensor_origin(0,0,0,0,0,0);
+  obs.setSensorPose(sensor_origin);
+  obs.fieldOfView_pitch = M_PI/180.0 * 270.0;
+
   for (std::vector<tuw_object_msgs::ObjectWithCovariance>::const_iterator it = _msg.objects.begin(); it != _msg.objects.end(); ++it)
   {
     if (it->object.shape == tuw_object_msgs::Object::SHAPE_DOOR)
     {
       const auto o_id = it->object.ids[0];
-      mrpt::maps::CBearing::Ptr bear;
+      CBearing::Ptr bear;
       if (!metric_map_.m_bearingMap && params_.update_map_)
       {
-        metric_map_.maps.push_back(mrpt::containers::deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr>(mrpt::maps::CBearingMap::Create()));
-      }
-      mrpt::maps::CBearingMap::Ptr bearings = metric_map_.m_bearingMap;
-      std::vector<mrpt::maps::CBearing::Ptr>::iterator it_b = std::find_if(bearings->begin(),bearings->end(),
-                                                       [&o_id] (const mrpt::maps::CBearing::Ptr b)
-                                                                  {
-                                                                      return b->m_ID == o_id;
-                                                                  });
-      if (it_b != bearings->end())
-      {
-        bear = *it_b; // update
-      }
-      else
-      {
-        bear = mrpt::maps::CBearing::Create(); //create
-      }
-      const auto &position = it->object.pose.position;
-      const auto &orientation = it->object.pose.orientation;
-
-      Eigen::Quaterniond q(orientation.w,orientation.x,orientation.y,orientation.z);
-      auto qeuler = q.toRotationMatrix().eulerAngles(0,1,2); //roll, pitch, yaw
-
-      bear->m_ID = o_id;
-      bear->m_typePDF = mrpt::maps::CBearing::pdfNO;
-
-      mrpt::math::TPose3D p;
-      {
-        p.roll = qeuler[0];
-        p.pitch = qeuler[1];
-        p.yaw = qeuler[2];
-        p.x = position.x;
-        p.y = position.y;
-        p.z = position.z;
+        metric_map_.maps.push_back(deepcopy_poly_ptr<CMetricMap::Ptr>(
+                                     CBearingMap::Create()));
       }
 
-      MRPT_TODO("correct insert mechanism");
-      bear->m_locationNoPDF.m_particles.resize(100);
-      for (auto it=bear->m_locationNoPDF.m_particles.begin();
-           it != bear->m_locationNoPDF.m_particles.end(); ++it)
-      {
-        it->d = mrpt::math::TPose3D(p);
-      }
+      CPose3D pose;
+      mrpt_bridge::convert(it->object.pose, pose);
 
-      if (it_b == bearings->end())
+      CObservationBearingRange::TMeasurement d;
+      std::cout << o_id << std::endl;
       {
-        bearings->push_back(bear);
+        d.landmarkID = o_id;
+        MRPT_TODO("yaw and pitch not correct!");
+        d.pitch = pose.pitch();
+        d.yaw = pose.yaw();
+        d.range = pose.distance3DTo(sensor_origin.x(), sensor_origin.y(), sensor_origin.z());
       }
+      std::cout << d.landmarkID << std::endl;
+      obs.sensedData.push_back(d);
     }
   }
+  metric_map_.m_bearingMap->insertObservation(dynamic_cast<mrpt::obs::CObservation*>(&obs), &sensor_origin);
 }
 
 void ObjectListenerNode::display()
