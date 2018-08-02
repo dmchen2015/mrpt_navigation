@@ -11,6 +11,8 @@
 #include <memory>
 #include <mrpt/opengl/COpenGLScene.h>
 #include <mrpt/gui/CDisplayWindow3D.h>
+#include <tf/transform_listener.h>
+#include <mrpt/poses/CPose3D.h>
 
 /**
  * This class listens to objectdetections and inserts them into mrpt maps.
@@ -18,25 +20,31 @@
  * @brief The ObjectListener class
  */
 
-class ObjectListenerNodeParams
-{
-   public:
-    bool load_map_;
-    bool update_map_;
-    std::string map_file_path_;
-    std::string bitmap_file_path_;
-    std::string ini_file_path_;
-};
-
 class ObjectListenerNode
 {
   public:
-    ObjectListenerNode(ros::NodeHandle &n);
+    struct ParametersNode
+    {
+        ParametersNode();
+        ros::NodeHandle nh;
+        bool load_map;
+        bool update_map;
+        bool debug;
+        std::string map_file_path_;
+        std::string bitmap_file_path_;
+        std::string ini_file_path_;
+        std::string tf_prefix;
+        std::string base_frame_id;
+    };
+
+   ObjectListenerNode(ros::NodeHandle &n);
     ~ObjectListenerNode();
 
+    ParametersNode *param();
     void init();
     void callbackMap(const nav_msgs::OccupancyGrid &_msg);
     void callbackObjectDetections(const tuw_object_msgs::ObjectDetection &_msg);
+    bool getStaticTF(std::string source_frame, mrpt::poses::CPose3D &des);
     void display();
     void saveMap();
 
@@ -46,8 +54,10 @@ class ObjectListenerNode
     ros::Subscriber sub_map_;
     ros::Subscriber sub_object_detections_;
     mrpt::maps::CMultiMetricMap metric_map_;
-    ObjectListenerNodeParams params_;
-
+    ParametersNode* params_;
+    tf::TransformListener listenerTF_;
+    std::map<std::string, mrpt::poses::CPose3D> static_tf_;
+    mrpt::poses::CPose3D map_pose_;
     //opengl stuff
     mrpt::gui::CDisplayWindow3D::Ptr window_;
 };
