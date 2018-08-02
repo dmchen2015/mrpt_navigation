@@ -4,11 +4,13 @@
 #include <mrpt/maps/CBearing.h>
 #include <mrpt/maps/CBearingMap.h>
 #include <mrpt/maps/CMultiMetricMap.h>
-#include <mrpt/containers/deepcopy_poly_ptr.h>
+#include <mrpt/maps/CSimpleMap.h>
 #include <mrpt/system/filesystem.h>
 
 #include <mrpt/io/CFileOutputStream.h>
 #include <mrpt/io/CFileInputStream.h>
+
+#include <string>
 
 #include <mrpt/obs/CObservationBearingRange.h>
 #include <mrpt/math/types_math.h>
@@ -30,6 +32,7 @@ ObjectListenerNode::ParametersNode::ParametersNode() : nh("~")
     nh.param<std::string>(std::string("tf_prefix"), tf_prefix, "");
     nh.param<bool>(std::string("load_map"), load_map, false);
     nh.param<bool>(std::string("update_map"), update_map, true);
+    nh.param<bool>(std::string("insert_as_simplemap"), insert_as_simplemap, false);
     ROS_INFO("tf_prefix: %s", tf_prefix.c_str());
     ROS_INFO("map_file: %s", map_file_path_.c_str());
     ROS_INFO("bitmap_file: %s", bitmap_file_path_.c_str());
@@ -80,8 +83,9 @@ void ObjectListenerNode::init()
   }
   if (!params_->load_map)
   {
-    mrpt::containers::deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> grid_map(mrpt::maps::COccupancyGridMap2D::Create());
-    mrpt::containers::deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> bearing_map(mrpt::maps::CBearingMap::Create());
+    using namespace mrpt::containers;
+    deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> grid_map(mrpt::maps::COccupancyGridMap2D::Create());
+    deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> bearing_map(mrpt::maps::CBearingMap::Create());
     metric_map_.m_gridMaps.push_back(grid_map);
     metric_map_.maps.push_back(bearing_map);
   }
@@ -90,23 +94,31 @@ void ObjectListenerNode::init()
     mrpt::config::CConfigFile ini_file;
     ini_file.setFileName(params_->ini_file_path_);
     MRPT_TODO("use a simplemap here");
-//    if (!mrpt_bridge::MapHdl::loadMap(metric_map_, ini_file, params_->map_file_path_, "metricMap"))
-//    {
-//      ROS_ERROR("map could not be loaded.");
-//    }
 
-    CFileInputStream f(params_->map_file_path_);
-    ROS_INFO("serialization process begin.");
+    if (params_->map_file_path_.find("simplemap") == std::string::npos)
+    {
+
+      CFileInputStream f(params_->map_file_path_);
 #if MRPT_VERSION >= 0x199
-    mrpt::serialization::archiveFrom(f) >> metric_map_;
+      mrpt::serialization::archiveFrom(f) >> metric_map_;
 #else
-    f >> metric_map_;
+      f >> metric_map_;
 #endif
-    ROS_INFO("serialization process end, map loaded.");
-    ASSERTMSG_(
-      std::distance(metric_map_.begin(), metric_map_.end()) > 0,
-      "Metric map was aparently loaded OK, but it is empty!");
 
+      ASSERTMSG_(
+        std::distance(metric_map_.begin(), metric_map_.end()) > 0,
+        "Metric map was aparently loaded OK, but it is empty!");
+
+    }
+    else
+    {
+
+      if (!mrpt_bridge::MapHdl::loadMap(metric_map_, ini_file, params_->map_file_path_, "metricMap"))
+      {
+        ROS_ERROR("map could not be loaded.");
+      }
+
+    }
   }
 }
 
@@ -115,6 +127,11 @@ void ObjectListenerNode::callbackMap(const nav_msgs::OccupancyGrid &_msg)
   ASSERT_(metric_map_.m_gridMaps.size() == 1);
   mrpt_bridge::convert(_msg, *metric_map_.m_gridMaps[0]);
   metric_map_.m_gridMaps[0]->saveAsBitmapFile(params_->bitmap_file_path_);
+  if (params_->insert_as_simplemap)
+  {
+    MRPT_TODO("Implement simplemap");
+    ROS_ERROR("Not implemented");
+  }
   if (!getStaticTF(_msg.header.frame_id, map_pose_))
   {
     ROS_ERROR("Map tf not present, cannot continue");
@@ -125,52 +142,6 @@ void ObjectListenerNode::saveMap()
 {
   mrpt::io::CFileOutputStream fileOut(params_->map_file_path_);
   mrpt::serialization::archiveFrom(fileOut) << metric_map_;
-}
-
-bool ObjectListenerNode::getStaticTF(std::string source_frame, mrpt::poses::CPose3D &des)
-{
-  std::string target_frame_id = tf::resolve(param()->tf_prefix, param()->base_frame_id);
-  std::string source_frame_id = source_frame;
-  std::string key = target_frame_id + "->" + source_frame_id;
-  mrpt::poses::CPose3D pose;
-  tf::StampedTransform transform;
-
-  if (static_tf_.find(key) == static_tf_.end()) {
-
-      try
-      {
-          if (param()->debug)
-              ROS_INFO(
-                  "debug: updateLaserPose(): target_frame_id='%s' source_frame_id='%s'",
-                  target_frame_id.c_str(), source_frame_id.c_str());
-
-          listenerTF_.lookupTransform(
-              target_frame_id, source_frame_id, ros::Time(0), transform);
-          tf::Vector3 translation = transform.getOrigin();
-          tf::Quaternion quat = transform.getRotation();
-          pose.x() = translation.x();
-          pose.y() = translation.y();
-          pose.z() = translation.z();
-          tf::Matrix3x3 Rsrc(quat);
-          mrpt::math::CMatrixDouble33 Rdes;
-          for (int c = 0; c < 3; c++)
-              for (int r = 0; r < 3; r++) Rdes(r, c) = Rsrc.getRow(r)[c];
-          pose.setRotationMatrix(Rdes);
-          static_tf_[key] = pose;
-          ROS_INFO("Static tf '%s' with '%s'",
-                   key.c_str(), pose.asString().c_str());
-      }
-      catch (tf::TransformException ex)
-      {
-          ROS_INFO("getStaticTF");
-          ROS_ERROR("%s", ex.what());
-          ros::Duration(1.0).sleep();
-          return false;
-      }
-  }
-  des = static_tf_[key];
-  return true;
-
 }
 
 void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectDetection &_msg)
@@ -184,7 +155,8 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
   obs.setSensorPose(map_pose_);
   obs.fieldOfView_pitch = M_PI/180.0 * 270.0;
 
-  for (std::vector<tuw_object_msgs::ObjectWithCovariance>::const_iterator it = _msg.objects.begin(); it != _msg.objects.end(); ++it)
+  for (std::vector<tuw_object_msgs::ObjectWithCovariance>::const_iterator it = _msg.objects.begin();
+       it != _msg.objects.end(); ++it)
   {
     if (it->object.shape == tuw_object_msgs::Object::SHAPE_DOOR)
     {
@@ -205,7 +177,7 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
         d.pitch = 0;
         double dx = pose.x() - map_pose_.x();
         double dy = pose.y() - map_pose_.y();
-        d.yaw = atan2(dy,dx);
+        d.yaw = atan2(dy, dx);
         d.range = pose.distance3DTo(map_pose_.x(), map_pose_.y(), pose.z());
       }
       obs.sensedData.push_back(d);
@@ -256,6 +228,52 @@ void ObjectListenerNode::display()
   ROS_INFO("repainting scene");
 
   MRPT_END
+}
+
+bool ObjectListenerNode::getStaticTF(std::string source_frame, mrpt::poses::CPose3D &des)
+{
+  std::string target_frame_id = tf::resolve(param()->tf_prefix, param()->base_frame_id);
+  std::string source_frame_id = source_frame;
+  std::string key = target_frame_id + "->" + source_frame_id;
+  mrpt::poses::CPose3D pose;
+  tf::StampedTransform transform;
+
+  if (static_tf_.find(key) == static_tf_.end()) {
+
+      try
+      {
+          if (param()->debug)
+              ROS_INFO(
+                  "debug: updateLaserPose(): target_frame_id='%s' source_frame_id='%s'",
+                  target_frame_id.c_str(), source_frame_id.c_str());
+
+          listenerTF_.lookupTransform(
+              target_frame_id, source_frame_id, ros::Time(0), transform);
+          tf::Vector3 translation = transform.getOrigin();
+          tf::Quaternion quat = transform.getRotation();
+          pose.x() = translation.x();
+          pose.y() = translation.y();
+          pose.z() = translation.z();
+          tf::Matrix3x3 Rsrc(quat);
+          mrpt::math::CMatrixDouble33 Rdes;
+          for (int c = 0; c < 3; c++)
+              for (int r = 0; r < 3; r++) Rdes(r, c) = Rsrc.getRow(r)[c];
+          pose.setRotationMatrix(Rdes);
+          static_tf_[key] = pose;
+          ROS_INFO("Static tf '%s' with '%s'",
+                   key.c_str(), pose.asString().c_str());
+      }
+      catch (tf::TransformException ex)
+      {
+          ROS_INFO("getStaticTF");
+          ROS_ERROR("%s", ex.what());
+          ros::Duration(1.0).sleep();
+          return false;
+      }
+  }
+  des = static_tf_[key];
+  return true;
+
 }
 
 int main(int argc, char **argv)

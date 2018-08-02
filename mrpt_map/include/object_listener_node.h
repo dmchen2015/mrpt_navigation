@@ -13,6 +13,7 @@
 #include <mrpt/gui/CDisplayWindow3D.h>
 #include <tf/transform_listener.h>
 #include <mrpt/poses/CPose3D.h>
+#include <mrpt/containers/deepcopy_poly_ptr.h>
 
 /**
  * This class listens to objectdetections and inserts them into mrpt maps.
@@ -30,12 +31,14 @@ class ObjectListenerNode
         bool load_map;
         bool update_map;
         bool debug;
+        bool insert_as_simplemap;
         std::string map_file_path_;
         std::string bitmap_file_path_;
         std::string ini_file_path_;
         std::string tf_prefix;
         std::string base_frame_id;
     };
+
 
    ObjectListenerNode(ros::NodeHandle &n);
     ~ObjectListenerNode();
@@ -49,6 +52,7 @@ class ObjectListenerNode
     void saveMap();
 
   private:
+
     ros::NodeHandle n_;
     ros::NodeHandle n_param_{"~"};
     ros::Subscriber sub_map_;
