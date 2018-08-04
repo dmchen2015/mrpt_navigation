@@ -7,7 +7,7 @@ add_compile_options(-march=native)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED COMPONENTS roscpp tf std_msgs nav_msgs sensor_msgs mrpt_bridge tuw_object_msgs)
+find_package(catkin REQUIRED COMPONENTS roscpp tf std_msgs nav_msgs sensor_msgs mrpt_bridge mrpt_msgs)
 
 find_package(MRPT 1.5 REQUIRED gui obs slam)
 message(STATUS "MRPT_VERSION: ${MRPT_VERSION}")
@@ -36,7 +36,7 @@ ENDIF()
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  CATKIN_DEPENDS roscpp tf std_msgs nav_msgs sensor_msgs mrpt_bridge tuw_object_msgs
+  CATKIN_DEPENDS roscpp tf std_msgs nav_msgs sensor_msgs mrpt_bridge mrpt_msgs
 #  DEPENDS mrpt
 )
 
@@ -57,9 +57,9 @@ target_link_libraries(map_server_node
   ${catkin_LIBRARIES}
 )
 
-add_executable(object_listener_node src/object_listener_node.cpp)
+add_executable(mrpt_map_creator_node src/mrpt_map_creator_node.cpp)
 
-target_link_libraries(object_listener_node
+target_link_libraries(mrpt_map_creator_node
   ${MRPT_LIBS}
   ${catkin_LIBRARIES}
   ${boost_LIBRARIES}
@@ -79,7 +79,7 @@ install(TARGETS map_server_node
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
-install(TARGETS object_listener_node
+install(TARGETS mrpt_map_creator_node
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}

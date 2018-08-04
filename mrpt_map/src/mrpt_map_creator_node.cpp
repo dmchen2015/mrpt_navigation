@@ -1,6 +1,7 @@
-#include <object_listener_node.h>
+#include <mrpt_map_creator_node.h>
 #include <mrpt_bridge/map.h>
 #include <mrpt_bridge/pose.h>
+#include <mrpt_bridge/landmark.h>
 #include <mrpt/maps/CBearing.h>
 #include <mrpt/maps/CBearingMap.h>
 #include <mrpt/maps/CMultiMetricMap.h>
@@ -23,7 +24,7 @@
 #include <mrpt/opengl/CSphere.h>
 #include <mrpt/opengl/stock_objects.h>
 
-ObjectListenerNode::ParametersNode::ParametersNode() : nh("~")
+MapCreatorNode::ParametersNode::ParametersNode() : nh("~")
 {
     nh.param<std::string>(std::string("simplemap_file"), map_file_path_, std::string(""));
     nh.param<std::string>(std::string("bitmap_file"), bitmap_file_path_, std::string(""));
@@ -42,22 +43,22 @@ ObjectListenerNode::ParametersNode::ParametersNode() : nh("~")
     ROS_INFO("load map: %s", load_map ? "True" : "False");
 }
 
-ObjectListenerNode::ObjectListenerNode(ros::NodeHandle& n) : n_(n)
+MapCreatorNode::MapCreatorNode(ros::NodeHandle& n) : n_(n)
 {
-  params_ = new ObjectListenerNode::ParametersNode();
+  params_ = new MapCreatorNode::ParametersNode();
 }
 
-ObjectListenerNode::~ObjectListenerNode()
+MapCreatorNode::~MapCreatorNode()
 {
   delete params_;
 }
 
-ObjectListenerNode::ParametersNode* ObjectListenerNode::param()
+MapCreatorNode::ParametersNode* MapCreatorNode::param()
 {
-  return (ObjectListenerNode::ParametersNode*) params_;
+  return (MapCreatorNode::ParametersNode*) params_;
 }
 
-void ObjectListenerNode::init()
+void MapCreatorNode::init()
 {
   using namespace mrpt::io;
 
@@ -78,8 +79,8 @@ void ObjectListenerNode::init()
 
   if (params_->update_map)
   {
-    sub_map_ = n_.subscribe("map", 1, &ObjectListenerNode::callbackMap, this);
-    sub_object_detections_ = n_.subscribe("map_doors", 1, &ObjectListenerNode::callbackObjectDetections, this);
+    sub_map_ = n_.subscribe("map", 1, &MapCreatorNode::callbackMap, this);
+    sub_object_detections_ = n_.subscribe("map_doors", 1, &MapCreatorNode::callbackBearings, this);
   }
   if (!params_->load_map)
   {
@@ -122,7 +123,7 @@ void ObjectListenerNode::init()
   }
 }
 
-void ObjectListenerNode::callbackMap(const nav_msgs::OccupancyGrid &_msg)
+void MapCreatorNode::callbackMap(const nav_msgs::OccupancyGrid &_msg)
 {
   ASSERT_(metric_map_.m_gridMaps.size() == 1);
   mrpt_bridge::convert(_msg, *metric_map_.m_gridMaps[0]);
@@ -138,13 +139,13 @@ void ObjectListenerNode::callbackMap(const nav_msgs::OccupancyGrid &_msg)
   }
 }
 
-void ObjectListenerNode::saveMap()
+void MapCreatorNode::saveMap()
 {
   mrpt::io::CFileOutputStream fileOut(params_->map_file_path_);
   mrpt::serialization::archiveFrom(fileOut) << metric_map_;
 }
 
-void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectDetection &_msg)
+void MapCreatorNode::callbackBearings(const mrpt_msgs::ObservationRangeBearing &_msg)
 {
   using namespace mrpt::obs;
   using namespace mrpt::maps;
@@ -152,41 +153,13 @@ void ObjectListenerNode::callbackObjectDetections(const tuw_object_msgs::ObjectD
   using namespace mrpt::poses;
 
   CObservationBearingRange obs;
-  obs.setSensorPose(map_pose_);
   obs.fieldOfView_pitch = M_PI/180.0 * 270.0;
+  mrpt_bridge::convert(_msg, obs);
 
-  for (std::vector<tuw_object_msgs::ObjectWithCovariance>::const_iterator it = _msg.objects.begin();
-       it != _msg.objects.end(); ++it)
-  {
-    if (it->object.shape == tuw_object_msgs::Object::SHAPE_DOOR)
-    {
-      const auto o_id = it->object.ids[0];
-      CBearing::Ptr bear;
-      if (!metric_map_.m_bearingMap && params_->update_map)
-      {
-        metric_map_.maps.push_back(deepcopy_poly_ptr<CMetricMap::Ptr>(
-                                     CBearingMap::Create()));
-      }
-
-      CPose3D pose;
-      mrpt_bridge::convert(it->object.pose, pose);
-
-      CObservationBearingRange::TMeasurement d;
-      {
-        d.landmarkID = o_id;
-        d.pitch = 0;
-        double dx = pose.x() - map_pose_.x();
-        double dy = pose.y() - map_pose_.y();
-        d.yaw = atan2(dy, dx);
-        d.range = pose.distance3DTo(map_pose_.x(), map_pose_.y(), pose.z());
-      }
-      obs.sensedData.push_back(d);
-    }
-  }
   metric_map_.m_bearingMap->insertObservation(dynamic_cast<mrpt::obs::CObservation*>(&obs), &map_pose_);
 }
 
-void ObjectListenerNode::display()
+void MapCreatorNode::display()
 {
   MRPT_START
   if (!metric_map_.m_bearingMap)
@@ -230,7 +203,7 @@ void ObjectListenerNode::display()
   MRPT_END
 }
 
-bool ObjectListenerNode::getStaticTF(std::string source_frame, mrpt::poses::CPose3D &des)
+bool MapCreatorNode::getStaticTF(std::string source_frame, mrpt::poses::CPose3D &des)
 {
   std::string target_frame_id = tf::resolve(param()->tf_prefix, param()->base_frame_id);
   std::string source_frame_id = source_frame;
@@ -281,7 +254,7 @@ int main(int argc, char **argv)
   ros::init(argc, argv, "object_listener_node");
   ros::NodeHandle nh;
 
-  ObjectListenerNode obj_listener_node(nh);
+  MapCreatorNode obj_listener_node(nh);
   obj_listener_node.init();
   ros::Rate rate(2);
 

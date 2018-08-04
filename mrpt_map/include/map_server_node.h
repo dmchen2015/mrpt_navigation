@@ -49,7 +49,6 @@ using namespace mrpt::utils;
 #endif
 
 #include <mrpt/maps/CMultiMetricMap.h>
-#include <tuw_object_msgs/ObjectDetection.h>
 #include <mrpt/core/common.h>
 using mrpt::maps::CMultiMetricMap;
 
@@ -76,7 +75,6 @@ class MapServer
 	void publishMap();
 	bool mapCallback(
 		nav_msgs::GetMap::Request& req, nav_msgs::GetMap::Response& res);
-  void objectDetectionCallback(tuw_object_msgs::ObjectDetection &obj);
 };
 
 #endif  // MRPT_MAP_SERVER_NODE_H

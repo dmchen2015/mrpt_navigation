@@ -40,7 +40,7 @@
 #include <mrpt_bridge/time.h>
 #include <mrpt_bridge/map.h>
 #include <mrpt_bridge/beacon.h>
-#include <mrpt_bridge/bearing.h>
+#include <mrpt_bridge/landmark.h>
 
 #include <mrpt/version.h>
 #include <mrpt/obs/CObservationBeaconRanges.h>
@@ -118,11 +118,11 @@ void PFLocalizationNode::init()
 			sub_sensors_[i] = nh_.subscribe(
 				sources[i], 1, &PFLocalizationNode::callbackBeacon, this);
 		}
-    else if (sources[i].find("bearing") != std::string::npos)
-    {
-      sub_sensors_[i] = nh_.subscribe(
-        sources[i], 1, &PFLocalizationNode::callbackBearing, this);
-    }
+        else if (sources[i].find("bearing") != std::string::npos)
+        {
+          sub_sensors_[i] = nh_.subscribe(
+            sources[i], 1, &PFLocalizationNode::callbackBearing, this);
+        }
 		else
 		{
 			sub_sensors_[i] = nh_.subscribe(

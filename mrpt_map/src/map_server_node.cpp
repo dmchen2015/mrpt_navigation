@@ -119,11 +119,6 @@ bool MapServer::mapCallback(
 	return true;
 }
 
-void MapServer::objectDetectionCallback(tuw_object_msgs::ObjectDetection &obj)
-{
-  MRPT_TODO("implement");
-}
-
 void MapServer::publishMap()
 {
 	resp_ros_.map.header.stamp = ros::Time::now();

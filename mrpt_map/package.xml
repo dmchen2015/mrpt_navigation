@@ -18,7 +18,7 @@
   <depend>sensor_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>mrpt_bridge</depend>
-  <depend>mrpt1</depend>
-  <depend>tuw_object_msgs</depend>
+  <depend>mrpt_msgs</depend>
+  <depend>mrpt</depend>
 
 </package>

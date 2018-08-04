@@ -10,6 +10,7 @@
     <param name="ini_file" value="$(find mrpt_map)/tutorial/constructed_map.ini"/>
     <param name="load_map" type="bool" value="true"/>
     <param name="update_map" type="bool" value="false"/>
+    <param name="publish_bearings" type="bool" value="true"/>
     <param name="base_frame_id" value="map"/>
   </node>
 
