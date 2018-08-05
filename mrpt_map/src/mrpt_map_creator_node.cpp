@@ -80,7 +80,7 @@ void MapCreatorNode::init()
   if (params_->update_map)
   {
     sub_map_ = n_.subscribe("map", 1, &MapCreatorNode::callbackMap, this);
-    sub_object_detections_ = n_.subscribe("map_doors", 1, &MapCreatorNode::callbackBearings, this);
+    sub_object_detections_ = n_.subscribe("bearings", 1, &MapCreatorNode::callbackBearings, this);
   }
   if (!params_->load_map)
   {
