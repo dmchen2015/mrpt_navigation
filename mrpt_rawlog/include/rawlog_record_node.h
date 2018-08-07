@@ -39,6 +39,7 @@
 #include <nav_msgs/Odometry.h>
 #include <sensor_msgs/LaserScan.h>
 #include <marker_msgs/MarkerDetection.h>
+#include <mrpt_msgs/ObservationRangeBearing.h>
 #include <dynamic_reconfigure/server.h>
 #include "mrpt_rawlog/RawLogRecordConfig.h"
 #include "mrpt_rawlog_record/rawlog_record.h"
@@ -49,57 +50,56 @@ class RawlogRecordNode : public RawlogRecord
 	MRPT_ROS_LOG_MACROS;
 
    public:
-	struct ParametersNode : public Parameters
-	{
-		static const int MOTION_MODEL_GAUSSIAN = 0;
-		static const int MOTION_MODEL_THRUN = 1;
-		ParametersNode();
-		ros::NodeHandle node;
-		void callbackParameters(
-			mrpt_rawlog::RawLogRecordConfig& config, uint32_t level);
-		dynamic_reconfigure::Server<mrpt_rawlog::RawLogRecordConfig>
-			reconfigureServer_;
-		dynamic_reconfigure::Server<mrpt_rawlog::RawLogRecordConfig>::CallbackType
-			reconfigureFnc_;
-		void update(const unsigned long& loop_count);
-		double rate;
-		int parameter_update_skip;
-		std::string tf_prefix;
-		std::string odom_frame_id;
-		std::string base_frame_id;
-        double sensor_frame_sync_threshold;
-	};
+    struct ParametersNode : public Parameters
+    {
+      static const int MOTION_MODEL_GAUSSIAN = 0;
+      static const int MOTION_MODEL_THRUN = 1;
+      ParametersNode();
+      ros::NodeHandle node;
+      void callbackParameters(mrpt_rawlog::RawLogRecordConfig& config, uint32_t level);
+      dynamic_reconfigure::Server<mrpt_rawlog::RawLogRecordConfig> reconfigureServer_;
+      dynamic_reconfigure::Server<mrpt_rawlog::RawLogRecordConfig>::CallbackType reconfigureFnc_;
+      void update(const unsigned long& loop_count);
+      double rate;
+      int parameter_update_skip;
+      std::string tf_prefix;
+      std::string odom_frame_id;
+      std::string base_frame_id;
+      double sensor_frame_sync_threshold;
+    };
 
-	RawlogRecordNode(ros::NodeHandle& n);
-	~RawlogRecordNode();
-	void init();
-	void loop();
-	void callbackLaser(const sensor_msgs::LaserScan&);                                    /// callback function to catch motion commands
-    void callbackMarker ( const marker_msgs::MarkerDetection& );            
+    RawlogRecordNode(ros::NodeHandle& n);
+    ~RawlogRecordNode();
+    void init();
+    void loop();
+    void callbackLaser(const sensor_msgs::LaserScan&);                                    /// callback function to catch motion commands
+    void callbackMarker(const marker_msgs::MarkerDetection& );
+    void callbackBearing(const mrpt_msgs::ObservationRangeBearing &);
     void callbackOdometry(const nav_msgs::Odometry&);
 
-   private:  // functions
-	ParametersNode* param();
-	void update();
-	bool getStaticTF(std::string source_frame, mrpt::poses::CPose3D& des);
-	ros::Subscriber subLaser_;
-	ros::Subscriber subMarker_;
-    ros::Subscriber subOdometry_; 
-	tf::TransformListener listenerTF_;
+  private:  // functions
+    ParametersNode* param();
+    void update();
+    bool getStaticTF(std::string source_frame, mrpt::poses::CPose3D& des);
+    ros::Subscriber subLaser_;
+    ros::Subscriber subMarker_;
+    ros::Subscriber subBearing_;
+    ros::Subscriber subOdometry_;
+    tf::TransformListener listenerTF_;
     mrpt::obs::CObservationBearingRange::Ptr last_bearing_range_;
     mrpt::obs::CObservationBeaconRanges::Ptr last_beacon_range_;
     mrpt::obs::CObservation2DRangeScan::Ptr  last_range_scan_;
     mrpt::obs::CObservationOdometry::Ptr last_odometry_;
     unsigned int sync_attempts_sensor_frame_;
-	std::map<std::string, mrpt::poses::CPose3D> static_tf_;
-	ros::NodeHandle n_;
+    std::map<std::string, mrpt::poses::CPose3D> static_tf_;
+    ros::NodeHandle n_;
     void addObservation(const ros::Time& time);
-	bool waitForTransform(
-		mrpt::poses::CPose3D& des, const std::string& target_frame,
-		const std::string& source_frame, const ros::Time& time,
-		const ros::Duration& timeout,
-		const ros::Duration& polling_sleep_duration = ros::Duration(0.01));
-    
+    bool waitForTransform(
+    mrpt::poses::CPose3D& des, const std::string& target_frame,
+    const std::string& source_frame, const ros::Time& time,
+    const ros::Duration& timeout,
+    const ros::Duration& polling_sleep_duration = ros::Duration(0.01));
+
     void convert(const nav_msgs::Odometry& src, mrpt::obs::CObservationOdometry &des);
 };
 

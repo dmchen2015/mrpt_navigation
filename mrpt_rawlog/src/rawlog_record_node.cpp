@@ -37,6 +37,7 @@
 #include <mrpt_bridge/pose.h>
 #include <mrpt_bridge/laser_scan.h>
 #include <mrpt_bridge/marker_msgs.h>
+#include <mrpt_bridge/landmark.h>
 #include <mrpt_bridge/time.h>
 
 #include <mrpt/version.h>
@@ -74,6 +75,7 @@ void RawlogRecordNode::init()
     }
     if (param_->record_bearing_range) {
         subMarker_ = n_.subscribe ( "marker", 1, &RawlogRecordNode::callbackMarker, this );
+        subBearing_ = n_.subscribe( "bearing", 1, &RawlogRecordNode::callbackBearing, this );
     }
     subOdometry_ = n_.subscribe ( "odom", 1, &RawlogRecordNode::callbackOdometry, this );
 }
@@ -171,6 +173,25 @@ void RawlogRecordNode::callbackMarker(const marker_msgs::MarkerDetection& _msg)
         addObservation(_msg.header.stamp);
     }
 
+}
+
+void RawlogRecordNode::callbackBearing(const mrpt_msgs::ObservationRangeBearing &_msg)
+{
+    if(!last_bearing_range_)
+    {
+      last_bearing_range_ = CObservationBearingRange::Create();
+    }
+    mrpt::poses::CPose3D sensor_pose_on_robot;
+
+    if (getStaticTF(_msg.header.frame_id, sensor_pose_on_robot))
+    {
+        mrpt_bridge::convert(_msg, sensor_pose_on_robot, *last_bearing_range_);
+        last_bearing_range_->sensor_std_range = param_->bearing_range_std_range;
+        last_bearing_range_->sensor_std_yaw = param_->bearing_range_std_yaw;
+        last_bearing_range_->sensor_std_pitch = param_->bearing_range_std_pitch;
+
+        addObservation(_msg.header.stamp);
+    }
 }
 
 void RawlogRecordNode::addObservation(const ros::Time& time) {

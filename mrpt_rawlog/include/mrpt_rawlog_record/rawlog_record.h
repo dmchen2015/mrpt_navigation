@@ -64,12 +64,12 @@ class RawlogRecord
 		std::string raw_log_folder;
 		std::string raw_log_name;
 		std::string raw_log_name_asf;
-        bool record_range_scan;
-        bool record_bearing_range;
-        bool record_beacon_range;
-        double bearing_range_std_range;
-        double bearing_range_std_yaw;
-        double bearing_range_std_pitch;
+    bool record_range_scan;
+    bool record_bearing_range;
+    bool record_beacon_range;
+    double bearing_range_std_range;
+    double bearing_range_std_yaw;
+    double bearing_range_std_pitch;
 		CActionRobotMovement2D::TMotionModelOptions motionModelOptions;
 	};
 	RawlogRecord(Parameters* parm);
