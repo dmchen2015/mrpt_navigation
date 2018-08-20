@@ -5,7 +5,7 @@
     <param name="frame_id" value="map"/>
     <param name="frequency" value="1"/>
     <!--<param name="ini_file" value="$(find mrpt_map)/tutorial/map.ini"/>-->
-    <param name="simplemap_file" value="$(find mrpt_map)/tutorial/constructed_map.map"/>
+    <param name="simplemap_file" value="$(find mrpt_map)/tutorial/constructed_map.multimetricmap"/>
     <param name="bitmap_file" value="$(find mrpt_map)/tutorial/constructed_map.bmp"/>
     <param name="ini_file" value="$(find mrpt_map)/tutorial/constructed_map.ini"/>
     <param name="load_map" type="bool" value="false"/>
