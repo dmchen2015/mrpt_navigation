@@ -55,14 +55,19 @@ RawlogRecordNode::ParametersNode::ParametersNode() : Parameters(), node("~")
 	reconfigureFnc_ = boost::bind(
 		&RawlogRecordNode::ParametersNode::callbackParameters, this, _1, _2);
 	reconfigureServer_.setCallback(reconfigureFnc_);
-    
+
+    node.param<double>("sensor_frame_sync_threshold", sensor_frame_sync_threshold, 0.5);
+    ROS_INFO("sensor_frame_sync_threshold: %lf", sensor_frame_sync_threshold);
+
 	node.param<bool>("record_range_scan", record_range_scan, true);
-	ROS_INFO("record_range_scan: %s", (record_range_scan?"ture":"flase"));
+    ROS_INFO("record_range_scan: %s", (record_range_scan?"true":"flase"));
 	node.param<bool>("record_bearing_range", record_bearing_range, false);
-	ROS_INFO("record_bearing_range: %s", (record_bearing_range?"ture":"flase"));
+    ROS_INFO("record_bearing_range: %s", (record_bearing_range?"true":"flase"));
 	node.param<bool>("record_beacon_range", record_beacon_range, false);
-	ROS_INFO("record_beacon_range: %s", (record_beacon_range?"ture":"flase"));
-    
+    ROS_INFO("record_beacon_range: %s", (record_beacon_range?"true":"flase"));
+
+    node.param<bool>("ignore_timestamp_difference", ignore_timestamp_difference, false);
+    ROS_INFO("ignore_timestamp_difference: %s", (ignore_timestamp_difference) ? "true" : "false");
 }
 
 void RawlogRecordNode::ParametersNode::update(const unsigned long& loop_count)

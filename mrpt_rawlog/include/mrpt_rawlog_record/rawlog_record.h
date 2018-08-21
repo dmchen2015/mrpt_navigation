@@ -75,6 +75,8 @@ class RawlogRecord
 	RawlogRecord(Parameters* parm);
 	~RawlogRecord();
 
+  virtual void write_();
+
    protected:
 	Parameters* param_;
 	CRawlog* pRawLog;

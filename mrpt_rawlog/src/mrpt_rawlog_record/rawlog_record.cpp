@@ -59,6 +59,27 @@ RawlogRecord::~RawlogRecord()
 	delete pRawLog;
 	delete pRawLogASF;
 }
+void RawlogRecord::write_()
+{
+    log_info("write data");
+    MRPT_TODO("RawlogRecord writes the rawlog only on exit (Ctrl-C)");
+    log_info("pRawLog    entries %i", pRawLog->size());
+    log_info("pRawLogASF entries %i", pRawLogASF->size());
+    if (pRawLog->size() > 0)
+    {
+        std::string filename =
+            param_->raw_log_folder + "/" + param_->raw_log_name;
+        log_info("write %s", filename.c_str());
+        pRawLog->saveToRawLogFile(filename);
+    }
+    if (pRawLogASF->size() > 0)
+    {
+        std::string filename =
+            param_->raw_log_folder + "/" + param_->raw_log_name_asf;
+        log_info("write %s", filename.c_str());
+        pRawLogASF->saveToRawLogFile(filename);
+    }
+}
 
 RawlogRecord::RawlogRecord(Parameters* param) : param_(param)
 {

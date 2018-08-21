@@ -66,6 +66,7 @@ class RawlogRecordNode : public RawlogRecord
       std::string odom_frame_id;
       std::string base_frame_id;
       double sensor_frame_sync_threshold;
+      bool ignore_timestamp_difference;
     };
 
     RawlogRecordNode(ros::NodeHandle& n);

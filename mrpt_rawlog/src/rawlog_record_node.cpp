@@ -127,7 +127,7 @@ void RawlogRecordNode::convert(const nav_msgs::Odometry& src, mrpt::obs::CObserv
 
 void RawlogRecordNode::callbackOdometry(const nav_msgs::Odometry& _msg)
 {
-    //ROS_INFO("callbackOdometry");
+    ROS_INFO("callbackOdometry: %lf", _msg.header.stamp.toSec());
     if(!last_odometry_) {
         last_odometry_ = CObservationOdometry::Create();
     }
@@ -162,7 +162,8 @@ void RawlogRecordNode::callbackMarker(const marker_msgs::MarkerDetection& _msg)
     }
     mrpt::poses::CPose3D sensor_pose_on_robot;
 
-    if (getStaticTF(_msg.header.frame_id, sensor_pose_on_robot)) {
+    if (getStaticTF(_msg.header.frame_id, sensor_pose_on_robot))
+    {
         mrpt_bridge::convert(_msg, sensor_pose_on_robot, *last_bearing_range_);
         last_bearing_range_->sensor_std_range  = param_->bearing_range_std_range;
         last_bearing_range_->sensor_std_yaw    = param_->bearing_range_std_yaw;
@@ -196,19 +197,14 @@ void RawlogRecordNode::callbackBearing(const mrpt_msgs::ObservationRangeBearing 
 
 void RawlogRecordNode::addObservation(const ros::Time& time) {
 
-
     sync_attempts_sensor_frame_++;
     if(sync_attempts_sensor_frame_ > 10) ROS_INFO("Problem to syn data for sensor frame!");
 
     if(!last_odometry_)
     {
-      ROS_WARN("no odometry");
       return;
     }
-    else
-    {
-      ROS_INFO("odom received");
-    }
+
     auto odometry = CObservationOdometry::Create();
     *odometry = *last_odometry_;
     pRawLog->addObservationMemoryReference(odometry);
@@ -217,32 +213,57 @@ void RawlogRecordNode::addObservation(const ros::Time& time) {
     CObservationBearingRange::Ptr bearing_range;
     CObservationBeaconRanges::Ptr beacon_range;
 
-    if (param_->record_range_scan && last_range_scan_) {
+    if ( param_->record_range_scan ) {
+        if (!last_range_scan_) return;
+
+        if (param()->ignore_timestamp_difference)
+        {
+            last_range_scan_->timestamp = last_odometry_->timestamp;
+        }
         if( fabs(mrpt::system::timeDifference(last_odometry_->timestamp, last_range_scan_->timestamp)) > param()->sensor_frame_sync_threshold) {
-            ROS_WARN("odom - laser timestamp difference greater than threshold.");
+            ROS_WARN("odom - laser timestamp difference greater than threshold %lf.", mrpt::system::timeDifference(last_odometry_->timestamp, last_range_scan_->timestamp));
             return;
         }
         range_scan = CObservation2DRangeScan::Create();
         *range_scan = *last_range_scan_;
         pRawLog->addObservationMemoryReference(range_scan);
+        if (param()->debug)
+        {
+            ROS_INFO("RawLogRecordNode::addObservation: inserted range scan");
+        }
     }
 
-    if (param_->record_bearing_range && last_bearing_range_) {
+    if (param_->record_bearing_range ) {
+        if (!last_bearing_range_) return;
+
+        if (param()->ignore_timestamp_difference)
+        {
+            last_bearing_range_->timestamp = last_odometry_->timestamp;
+        }
         if( fabs(mrpt::system::timeDifference(last_odometry_->timestamp, last_bearing_range_->timestamp)) > param()->sensor_frame_sync_threshold) {
-            ROS_WARN("odom - bearingrange timestamp difference greater than threshold.");
+            ROS_WARN("odom - bearingrange timestamp difference greater than threshold %lf.", mrpt::system::timeDifference(last_odometry_->timestamp, last_bearing_range_->timestamp));
             return;
         }
         bearing_range = CObservationBearingRange::Create();
         *bearing_range = *last_bearing_range_;
         pRawLog->addObservationMemoryReference(bearing_range);
+        if (param()->debug)
+        {
+            ROS_INFO("RawLogRecordNode::addObservation: inserted bearing");
+        }
     }
-    if (param_->record_beacon_range && last_beacon_range_) {
-        if( fabs(mrpt::system::timeDifference(last_odometry_->timestamp, last_beacon_range_->timestamp)) > param()->sensor_frame_sync_threshold) {
+    if (param_->record_beacon_range ) {
+        if (!last_beacon_range_) return;
+        if( fabs(mrpt::system::timeDifference(last_odometry_->timestamp, last_beacon_range_->timestamp)) > param()->sensor_frame_sync_threshold && !param()->ignore_timestamp_difference) {
             return;
         }
         beacon_range = CObservationBeaconRanges::Create();
         *beacon_range = *last_beacon_range_;
         pRawLog->addObservationMemoryReference(beacon_range);
+        if (param()->debug)
+        {
+            ROS_INFO("RawLogRecordNode::addObservation: inserted beacon");
+        }
     }
 
 
@@ -290,7 +311,10 @@ bool RawlogRecordNode::getStaticTF(std::string source_frame, mrpt::poses::CPose3
     std::string key = target_frame_id + "->" + source_frame_id;
     mrpt::poses::CPose3D pose;
     tf::StampedTransform transform;
-    ROS_INFO("lookupTransform: %s", key.c_str());
+    if (param()->debug)
+    {
+        ROS_INFO("RawlogRecordNode::getStaticTF -> lookupTransform: %s", key.c_str());
+    }
 
     if (static_tf_.find(key) == static_tf_.end()) {
 
@@ -298,7 +322,7 @@ bool RawlogRecordNode::getStaticTF(std::string source_frame, mrpt::poses::CPose3
         {
             if (param_->debug)
                 ROS_INFO(
-                    "debug: updateLaserPose(): target_frame_id='%s' source_frame_id='%s'",
+                    "debug: getStaticTF(): target_frame_id='%s' source_frame_id='%s'",
                     target_frame_id.c_str(), source_frame_id.c_str());
 
             listenerTF_.lookupTransform(
