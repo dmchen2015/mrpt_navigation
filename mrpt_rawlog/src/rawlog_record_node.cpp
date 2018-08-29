@@ -203,6 +203,8 @@ void RawlogRecordNode::addObservation(const ros::Time& time) {
     if(!last_odometry_)
     {
       return;
+    } else if(param()->ignore_timestamp_difference){
+      last_odometry_->timestamp = mrpt::system::now();
     }
 
     auto odometry = CObservationOdometry::Create();
@@ -301,7 +303,7 @@ void RawlogRecordNode::addObservation(const ros::Time& time) {
     *lastOdomPose = odometry->odometry;
 
     sync_attempts_sensor_frame_ = 0;
-
+    //write_();
 }
 
 bool RawlogRecordNode::getStaticTF(std::string source_frame, mrpt::poses::CPose3D &des)

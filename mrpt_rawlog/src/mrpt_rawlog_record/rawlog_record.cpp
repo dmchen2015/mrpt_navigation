@@ -59,6 +59,7 @@ RawlogRecord::~RawlogRecord()
 	delete pRawLog;
 	delete pRawLogASF;
 }
+
 void RawlogRecord::write_()
 {
     log_info("write data");

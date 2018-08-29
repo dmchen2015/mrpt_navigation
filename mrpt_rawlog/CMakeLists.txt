@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 set (CMAKE_CXX_STANDARD 14)
 project(mrpt_rawlog)
 
-add_compile_options(-march=native)
+#add_compile_options(-march=native)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -24,7 +24,7 @@ if (CMAKE_COMPILER_IS_GNUCXX)
 endif()
 
 IF(CMAKE_COMPILER_IS_GNUCXX AND NOT CMAKE_BUILD_TYPE MATCHES "Debug")
-  add_compile_options(-O3)
+  #add_compile_options(-O3)
 ENDIF()
 
 # add dynamic reconfigure api
