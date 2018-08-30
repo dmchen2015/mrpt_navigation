@@ -127,7 +127,7 @@ void RawlogRecordNode::convert(const nav_msgs::Odometry& src, mrpt::obs::CObserv
 
 void RawlogRecordNode::callbackOdometry(const nav_msgs::Odometry& _msg)
 {
-    ROS_INFO("callbackOdometry: %lf", _msg.header.stamp.toSec());
+    //ROS_INFO("callbackOdometry: %lf", _msg.header.stamp.toSec());
     if(!last_odometry_) {
         last_odometry_ = CObservationOdometry::Create();
     }
@@ -353,5 +353,4 @@ bool RawlogRecordNode::getStaticTF(std::string source_frame, mrpt::poses::CPose3
     }
     des = static_tf_[key];
     return true;
-
 }
