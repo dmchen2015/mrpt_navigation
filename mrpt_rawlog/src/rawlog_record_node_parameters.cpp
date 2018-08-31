@@ -38,8 +38,6 @@
 
 RawlogRecordNode::ParametersNode::ParametersNode() : Parameters(), node("~")
 {
-	node.param<double>("rate", rate, RAWLOG_RECORD_NODE_DEFAULT_RATE);
-	ROS_INFO("rate: %f", rate);
 	node.param<int>(
 		"parameter_update_skip", parameter_update_skip,
 		RAWLOG_RECORD_NODE_DEFAULT_PARAMETER_UPDATE_SKIP);
