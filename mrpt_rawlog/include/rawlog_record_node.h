@@ -60,7 +60,6 @@ class RawlogRecordNode : public RawlogRecord
       dynamic_reconfigure::Server<mrpt_rawlog::RawLogRecordConfig> reconfigureServer_;
       dynamic_reconfigure::Server<mrpt_rawlog::RawLogRecordConfig>::CallbackType reconfigureFnc_;
       void update(const unsigned long& loop_count);
-      double rate;
       int parameter_update_skip;
       std::string tf_prefix;
       std::string odom_frame_id;

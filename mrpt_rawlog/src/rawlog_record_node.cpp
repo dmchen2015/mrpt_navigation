@@ -333,7 +333,7 @@ bool RawlogRecordNode::getStaticTF(std::string source_frame, mrpt::poses::CPose3
             tf::Quaternion quat = transform.getRotation();
             pose.x() = translation.x();
             pose.y() = translation.y();
-            pose.z() = translation.z();
+            pose.z() = 0;
             tf::Matrix3x3 Rsrc(quat);
             mrpt::math::CMatrixDouble33 Rdes;
             for (int c = 0; c < 3; c++)
