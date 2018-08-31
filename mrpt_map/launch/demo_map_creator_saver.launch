@@ -1,4 +1,25 @@
 <launch>
+  <param name="robot_perspective" type="bool" value="false"/>
+  <param name="package_dir" type="str" value="$(find tuw_object_publisher)"/>
+  <param name="debug" type="bool" value="false"/>
+ 
+  <rosparam command="load" file="$(find tuw_object_publisher)/launch/config.yaml" />
+  <node name="object_publisher_node" pkg="tuw_object_publisher" type="object_publisher_node" output="screen">
+  </node>
+ 
+  <arg name="map_file" default="/home/felix/pCloudDrive/bag_files/map.yaml"/>
+  <arg name="bearing_topic_name" default="/bearing_gt"/>
+  <arg name="object_detections_topic_name" default="/map_doors"/>
+
+  <node pkg="map_server" type="map_server" name="map_server" output="screen" args="$(arg map_file)"/>
+
+  <node pkg="mrpt_object_converter" type="mrpt_object_converter_node" name="mrpt_object_converter_node" output="screen">
+        <param name="base_frame_id" value="map"/>
+        <param name="frame_id" value="/map"/> <!-- assume that the bearings are stored in robot space (as seen from robot) -->
+        <param name="publisher_topic_name" value="$(arg bearing_topic_name)"/>
+        <param name="subscriber_topic_name" value="$(arg object_detections_topic_name)"/>
+        <param name="debug" type="bool" value="false"/>
+  </node>
 
   <node pkg="mrpt_map" type="mrpt_map_creator_node" name="mrpt_map_creator_node" output="screen">
 
@@ -13,6 +34,7 @@
     <param name="publish_bearings" type="bool" value="true"/>
     <param name="insert_as_simplemap" type="bool" value="false"/>
     <param name="base_frame_id" value="map"/>
+    <remap from="bearings" to="$(arg bearing_topic_name)"/>
   </node>
 
 </launch>
