@@ -62,6 +62,8 @@ void MapCreatorNode::init()
 {
   using namespace mrpt::io;
 
+  map_pose_ = mrpt::poses::CPose3D(0,0,0,0,0,0);
+
   if (params_->load_map)
   {
     ASSERT_FILE_EXISTS_(params_->ini_file_path_);
