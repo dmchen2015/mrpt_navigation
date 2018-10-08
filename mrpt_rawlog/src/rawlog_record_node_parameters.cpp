@@ -54,18 +54,21 @@ RawlogRecordNode::ParametersNode::ParametersNode() : Parameters(), node("~")
 		&RawlogRecordNode::ParametersNode::callbackParameters, this, _1, _2);
 	reconfigureServer_.setCallback(reconfigureFnc_);
 
-    node.param<double>("sensor_frame_sync_threshold", sensor_frame_sync_threshold, 0.5);
-    ROS_INFO("sensor_frame_sync_threshold: %lf", sensor_frame_sync_threshold);
+  node.param<double>("sensor_frame_sync_threshold", sensor_frame_sync_threshold, 0.5);
+  ROS_INFO("sensor_frame_sync_threshold: %lf", sensor_frame_sync_threshold);
 
 	node.param<bool>("record_range_scan", record_range_scan, true);
-    ROS_INFO("record_range_scan: %s", (record_range_scan?"true":"flase"));
+  ROS_INFO("record_range_scan: %s", (record_range_scan?"true":"flase"));
 	node.param<bool>("record_bearing_range", record_bearing_range, false);
-    ROS_INFO("record_bearing_range: %s", (record_bearing_range?"true":"flase"));
+  ROS_INFO("record_bearing_range: %s", (record_bearing_range?"true":"flase"));
 	node.param<bool>("record_beacon_range", record_beacon_range, false);
-    ROS_INFO("record_beacon_range: %s", (record_beacon_range?"true":"flase"));
+  ROS_INFO("record_beacon_range: %s", (record_beacon_range?"true":"flase"));
 
-    node.param<bool>("ignore_timestamp_difference", ignore_timestamp_difference, false);
-    ROS_INFO("ignore_timestamp_difference: %s", (ignore_timestamp_difference) ? "true" : "false");
+  node.param<bool>("ignore_timestamp_difference", ignore_timestamp_difference, false);
+  ROS_INFO("ignore_timestamp_difference: %s", (ignore_timestamp_difference) ? "true" : "false");
+  
+  node.param<bool>("record_object_observation", record_object_observation, false);
+  ROS_INFO("record_object_observation: %s", record_object_observation ? "true" : "false"); 
 }
 
 void RawlogRecordNode::ParametersNode::update(const unsigned long& loop_count)
@@ -102,14 +105,14 @@ void RawlogRecordNode::ParametersNode::callbackParameters(
 			motionModelOptions.gaussianModel.minStdPHI);
         
         
-        bearing_range_std_range = config.bearing_range_std_range;
-        bearing_range_std_yaw = config.bearing_range_std_yaw;
-        bearing_range_std_pitch = config.bearing_range_std_pitch;
-        ROS_INFO("bearing_range_std_range: %f", bearing_range_std_range);
-        ROS_INFO("bearing_range_std_yaw: %f", bearing_range_std_yaw);
-        ROS_INFO("bearing_range_std_pitch: %f", bearing_range_std_pitch);
-        
-        sensor_frame_sync_threshold = config.sensor_frame_sync_threshold;
-        ROS_INFO("sensor_frame_sync_threshold: %f", sensor_frame_sync_threshold);
+    bearing_range_std_range = config.bearing_range_std_range;
+    bearing_range_std_yaw = config.bearing_range_std_yaw;
+    bearing_range_std_pitch = config.bearing_range_std_pitch;
+    ROS_INFO("bearing_range_std_range: %f", bearing_range_std_range);
+    ROS_INFO("bearing_range_std_yaw: %f", bearing_range_std_yaw);
+    ROS_INFO("bearing_range_std_pitch: %f", bearing_range_std_pitch);
+    
+    sensor_frame_sync_threshold = config.sensor_frame_sync_threshold;
+    ROS_INFO("sensor_frame_sync_threshold: %f", sensor_frame_sync_threshold);
 	}
 }

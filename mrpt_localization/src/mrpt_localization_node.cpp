@@ -118,11 +118,11 @@ void PFLocalizationNode::init()
 			sub_sensors_[i] = nh_.subscribe(
 				sources[i], 1, &PFLocalizationNode::callbackBeacon, this);
 		}
-        else if (sources[i].find("bearing") != std::string::npos)
-        {
-          sub_sensors_[i] = nh_.subscribe(
-            sources[i], 1, &PFLocalizationNode::callbackBearing, this);
-        }
+    //else if (sources[i].find("bearing") != std::string::npos)
+    //{
+    //  sub_sensors_[i] = nh_.subscribe(
+    //    sources[i], 1, &PFLocalizationNode::callbackBearing, this);
+    //}
 		else
 		{
 			sub_sensors_[i] = nh_.subscribe(
@@ -227,39 +227,39 @@ void PFLocalizationNode::callbackLaser(const sensor_msgs::LaserScan& _msg)
 	}
 }
 
-void PFLocalizationNode::callbackBearing(const mrpt_msgs::ObservationRangeBearing &_msg)
-{
-  using namespace mrpt::maps;
-  using namespace mrpt::obs;
-
-  if(!metric_map_.m_bearingMap)
-  {
-    ROS_ERROR("No bearings stored.");
-  }
-
-  time_last_input_ = ros::Time::now();
-
-  auto bearing = CObservationBearingRange::Create();
-
-  if (bearing_poses_.find(_msg.header.frame_id) == bearing_poses_.end())
-  {
-    updateSensorPose(_msg.header.frame_id);
-  }
-  else if (state_ != IDLE)
-  {
-    mrpt_bridge::convert(
-      _msg, bearing_poses_[_msg.header.frame_id], *bearing);
-
-    auto sf = CSensoryFrame::Create();
-    CObservationOdometry::Ptr odometry;
-    odometryForCallback(odometry, _msg.header);
-
-    CObservation::Ptr obs = CObservation::Ptr(bearing);
-    sf->insert(obs);
-    observation(sf, odometry);
-    if (param()->gui_mrpt) show3DDebug(sf);
-  }
-}
+//void PFLocalizationNode::callbackBearing(const mrpt_msgs::ObservationRangeBearing &_msg)
+//{
+//  using namespace mrpt::maps;
+//  using namespace mrpt::obs;
+//
+//  if(!metric_map_.m_bearingMap)
+//  {
+//    ROS_ERROR("No bearings stored.");
+//  }
+//
+//  time_last_input_ = ros::Time::now();
+//
+//  auto bearing = CObservationBearingRange::Create();
+//
+//  if (bearing_poses_.find(_msg.header.frame_id) == bearing_poses_.end())
+//  {
+//    updateSensorPose(_msg.header.frame_id);
+//  }
+//  else if (state_ != IDLE)
+//  {
+//    mrpt_bridge::convert(
+//      _msg, bearing_poses_[_msg.header.frame_id], *bearing);
+//
+//    auto sf = CSensoryFrame::Create();
+//    CObservationOdometry::Ptr odometry;
+//    odometryForCallback(odometry, _msg.header);
+//
+//    CObservation::Ptr obs = CObservation::Ptr(bearing);
+//    sf->insert(obs);
+//    observation(sf, odometry);
+//    if (param()->gui_mrpt) show3DDebug(sf);
+//  }
+//}
 
 void PFLocalizationNode::callbackBeacon(
 	const mrpt_msgs::ObservationRangeBeacon& _msg)

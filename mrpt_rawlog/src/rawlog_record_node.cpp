@@ -195,6 +195,26 @@ void RawlogRecordNode::callbackBearing(const mrpt_msgs::ObservationRangeBearing 
     }
 }
 
+void RawlogRecordNode::callbackObjectObservation(const mrpt_msgs::ObservationObject &_msg)
+{
+  	if(!last_object_observation_)
+    {
+      last_object_observation_ = CObservationObject::Create();
+      
+      mrpt::poses::CPose3D sensor_pose_on_robot;
+      
+      if (getStaticTF(_msg.header.frame_id, sensor_pose_on_robot))
+    	{
+    	    mrpt_bridge::convert(_msg, sensor_pose_on_robot, *last_object_observation_);
+    	    last_object_observation_->sensor_std_range = param_->bearing_range_std_range;
+    	    last_object_observation_->sensor_std_yaw = param_->bearing_range_std_yaw;
+    	    last_object_observation_->sensor_std_pitch = param_->bearing_range_std_pitch;
+
+    	    addObservation(_msg.header.stamp);
+    	}
+    }
+}
+
 void RawlogRecordNode::addObservation(const ros::Time& time) {
 
     sync_attempts_sensor_frame_++;
@@ -214,6 +234,7 @@ void RawlogRecordNode::addObservation(const ros::Time& time) {
     CObservation2DRangeScan::Ptr range_scan;
     CObservationBearingRange::Ptr bearing_range;
     CObservationBeaconRanges::Ptr beacon_range;
+    CObservationObject::Ptr object_observation;
 
     if ( param_->record_range_scan ) {
         if (!last_range_scan_) return;
@@ -254,6 +275,27 @@ void RawlogRecordNode::addObservation(const ros::Time& time) {
             ROS_INFO("RawLogRecordNode::addObservation: inserted bearing");
         }
     }
+    
+    if (param_->record_object_observation ) {
+        if (!last_object_observation_) return;
+
+        if (param()->ignore_timestamp_difference)
+        {
+            last_object_observation_->timestamp = last_odometry_->timestamp;
+        }
+        if( fabs(mrpt::system::timeDifference(last_odometry_->timestamp, last_object_observation_->timestamp)) > param()->sensor_frame_sync_threshold) {
+            ROS_WARN("odom - bearingrange timestamp difference greater than threshold %lf.", mrpt::system::timeDifference(last_odometry_->timestamp, last_object_observation_->timestamp));
+            return;
+        }
+        object_observation = CObservationObject::Create();
+        *object_observation = *last_object_observation_;
+        pRawLog->addObservationMemoryReference(object_observation);
+        if (param()->debug)
+        {
+            ROS_INFO("RawLogRecordNode::addObservation: inserted bearing");
+        }
+    }
+    
     if (param_->record_beacon_range ) {
         if (!last_beacon_range_) return;
         if( fabs(mrpt::system::timeDifference(last_odometry_->timestamp, last_beacon_range_->timestamp)) > param()->sensor_frame_sync_threshold && !param()->ignore_timestamp_difference) {
@@ -289,10 +331,13 @@ void RawlogRecordNode::addObservation(const ros::Time& time) {
         CObservation::Ptr obs_range_scan = CObservation::Ptr(range_scan);
         sf->insert(obs_range_scan);
     }
-
     if (param_->record_bearing_range) {
         CObservation::Ptr obs_bearing_range = CObservation::Ptr(bearing_range);
         sf->insert(obs_bearing_range);
+    }
+    if (param_->record_object_observation) {
+      	CObservation::Ptr obs_object = CObservation::Ptr(object_observation);
+        sf->insert(obs_object);
     }
     if (param_->record_beacon_range) {
         CObservation::Ptr obs_bearing_range = CObservation::Ptr(beacon_range);

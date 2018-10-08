@@ -13,7 +13,8 @@
 #include <tf/transform_listener.h>
 #include <mrpt/poses/CPose3D.h>
 #include <mrpt/containers/deepcopy_poly_ptr.h>
-#include <mrpt_msgs/ObservationRangeBearing.h>
+#include <mrpt_msgs/ObservationObject.h>
+//#include <mrpt_msgs/ObservationRangeBearing.h>
 
 /**
  * This class listens to objectdetections and inserts them into mrpt maps.
@@ -46,7 +47,8 @@ class MapCreatorNode
     ParametersNode *param();
     void init();
     void callbackMap(const nav_msgs::OccupancyGrid &_msg);
-    void callbackBearings(const mrpt_msgs::ObservationRangeBearing &_msg);
+    //void callbackBearings(const mrpt_msgs::ObservationRangeBearing &_msg);
+		void callbackObjectObservations(const mrpt_msgs::ObservationObject &_msg);
     bool getStaticTF(std::string source_frame, mrpt::poses::CPose3D &des);
     void display();
     void saveMap();
@@ -58,7 +60,6 @@ class MapCreatorNode
     ros::Subscriber sub_map_;
     ros::Subscriber sub_object_detections_;
     mrpt::maps::CMultiMetricMap metric_map_;
-    mrpt_msgs::ObservationRangeBearing pending_bearing_;
     ParametersNode* params_;
     tf::TransformListener listenerTF_;
     std::map<std::string, mrpt::poses::CPose3D> static_tf_;

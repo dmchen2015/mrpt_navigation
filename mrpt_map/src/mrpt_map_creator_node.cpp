@@ -2,8 +2,8 @@
 #include <mrpt_bridge/map.h>
 #include <mrpt_bridge/pose.h>
 #include <mrpt_bridge/landmark.h>
-#include <mrpt/maps/CBearing.h>
-#include <mrpt/maps/CBearingMap.h>
+#include <mrpt/maps/COObject.h>
+#include <mrpt/maps/COObjectMap.h>
 #include <mrpt/maps/CMultiMetricMap.h>
 #include <mrpt/maps/CSimpleMap.h>
 #include <mrpt/system/filesystem.h>
@@ -26,21 +26,21 @@
 
 MapCreatorNode::ParametersNode::ParametersNode() : nh("~")
 {
-    nh.param<std::string>(std::string("simplemap_file"), map_file_path_, std::string(""));
-    nh.param<std::string>(std::string("bitmap_file"), bitmap_file_path_, std::string(""));
-    nh.param<std::string>(std::string("ini_file"), ini_file_path_, std::string(""));
-    nh.param<std::string>(std::string("base_frame_id"), base_frame_id, "base_link");
-    nh.param<std::string>(std::string("tf_prefix"), tf_prefix, "");
-    nh.param<bool>(std::string("load_map"), load_map, false);
-    nh.param<bool>(std::string("update_map"), update_map, true);
-    nh.param<bool>(std::string("insert_as_simplemap"), insert_as_simplemap, false);
-    ROS_INFO("tf_prefix: %s", tf_prefix.c_str());
-    ROS_INFO("map_file: %s", map_file_path_.c_str());
-    ROS_INFO("bitmap_file: %s", bitmap_file_path_.c_str());
-    ROS_INFO("ini file: %s", ini_file_path_.c_str());
-    ROS_INFO("base_frame_id: %s", base_frame_id.c_str());
-    ROS_INFO("update map: %s", update_map ? "True" : "False");
-    ROS_INFO("load map: %s", load_map ? "True" : "False");
+  nh.param<std::string>(std::string("simplemap_file"), map_file_path_, std::string(""));
+  nh.param<std::string>(std::string("bitmap_file"), bitmap_file_path_, std::string(""));
+  nh.param<std::string>(std::string("ini_file"), ini_file_path_, std::string(""));
+  nh.param<std::string>(std::string("base_frame_id"), base_frame_id, "base_link");
+  nh.param<std::string>(std::string("tf_prefix"), tf_prefix, "");
+  nh.param<bool>(std::string("load_map"), load_map, false);
+  nh.param<bool>(std::string("update_map"), update_map, true);
+  nh.param<bool>(std::string("insert_as_simplemap"), insert_as_simplemap, false);
+  ROS_INFO("tf_prefix: %s", tf_prefix.c_str());
+  ROS_INFO("map_file: %s", map_file_path_.c_str());
+  ROS_INFO("bitmap_file: %s", bitmap_file_path_.c_str());
+  ROS_INFO("ini file: %s", ini_file_path_.c_str());
+  ROS_INFO("base_frame_id: %s", base_frame_id.c_str());
+  ROS_INFO("update map: %s", update_map ? "True" : "False");
+  ROS_INFO("load map: %s", load_map ? "True" : "False");
 }
 
 MapCreatorNode::MapCreatorNode(ros::NodeHandle& n) : n_(n)
@@ -82,13 +82,13 @@ void MapCreatorNode::init()
   if (params_->update_map)
   {
     sub_map_ = n_.subscribe("map", 1, &MapCreatorNode::callbackMap, this);
-    sub_object_detections_ = n_.subscribe("bearing_gt", 1, &MapCreatorNode::callbackBearings, this);
+    sub_object_detections_ = n_.subscribe("bearing_gt", 1, &MapCreatorNode::callbackObjectObservations, this);
   }
   if (!params_->load_map)
   {
     using namespace mrpt::containers;
     deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> grid_map(mrpt::maps::COccupancyGridMap2D::Create());
-    deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> bearing_map(mrpt::maps::CBearingMap::Create());
+    deepcopy_poly_ptr<mrpt::maps::CMetricMap::Ptr> bearing_map(mrpt::maps::COObjectMap::Create());
     metric_map_.m_gridMaps.push_back(grid_map);
     metric_map_.maps.push_back(bearing_map);
   }
@@ -147,24 +147,28 @@ void MapCreatorNode::saveMap()
   mrpt::serialization::archiveFrom(fileOut) << metric_map_;
 }
 
-void MapCreatorNode::callbackBearings(const mrpt_msgs::ObservationRangeBearing &_msg)
-{
-  using namespace mrpt::obs;
-  using namespace mrpt::maps;
-  using namespace mrpt::containers;
-  using namespace mrpt::poses;
+//void MapCreatorNode::callbackBearings(const mrpt_msgs::ObservationRangeBearing &_msg)
+//{
+//  mrpt::obs::CObservationBearingRange obs;
+//  obs.fieldOfView_pitch = M_PI/180.0 * 270.0;
+//  mrpt_bridge::convert(_msg, obs);
+//
+//  metric_map_.m_objectMap->insertObservation(dynamic_cast<mrpt::obs::CObservation*>(&obs), &map_pose_);
+//}
 
-  CObservationBearingRange obs;
+void MapCreatorNode::callbackObjectObservations(const mrpt_msgs::ObservationObject &_msg)
+{
+  mrpt::obs::CObservationObject obs;
   obs.fieldOfView_pitch = M_PI/180.0 * 270.0;
   mrpt_bridge::convert(_msg, obs);
-
-  metric_map_.m_bearingMap->insertObservation(dynamic_cast<mrpt::obs::CObservation*>(&obs), &map_pose_);
+  
+  metric_map_.m_objectMap->insertObservation(dynamic_cast<mrpt::obs::CObservation*>(&obs), &map_pose_);
 }
 
 void MapCreatorNode::display()
 {
   MRPT_START
-  if (!metric_map_.m_bearingMap)
+  if (!metric_map_.m_objectMap)
   {
     std::cout << "no bearingmap" << std::endl;
   }

@@ -103,7 +103,7 @@ class PFLocalizationNode : public PFLocalization
 	void loop();
 	void callbackLaser(const sensor_msgs::LaserScan&);
 	void callbackBeacon(const mrpt_msgs::ObservationRangeBeacon&);
-  void callbackBearing(const mrpt_msgs::ObservationRangeBearing&);
+  //void callbackBearing(const mrpt_msgs::ObservationRangeBearing&);
 	void callbackRobotPose(const geometry_msgs::PoseWithCovarianceStamped&);
 	void odometryForCallback(
 		CObservationOdometry::Ptr&, const std_msgs::Header&);

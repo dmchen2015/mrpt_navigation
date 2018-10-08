@@ -40,7 +40,11 @@
 #include <sensor_msgs/LaserScan.h>
 #include <marker_msgs/MarkerDetection.h>
 #include <mrpt_msgs/ObservationRangeBearing.h>
+#include <mrpt_msgs/ObservationObject.h>
 #include <dynamic_reconfigure/server.h>
+
+#include <mrpt/obs/CObservationObject.h>
+
 #include "mrpt_rawlog/RawLogRecordConfig.h"
 #include "mrpt_rawlog_record/rawlog_record.h"
 
@@ -76,6 +80,7 @@ class RawlogRecordNode : public RawlogRecord
     void callbackMarker(const marker_msgs::MarkerDetection& );
     void callbackBearing(const mrpt_msgs::ObservationRangeBearing &);
     void callbackOdometry(const nav_msgs::Odometry&);
+		void callbackObjectObservation(const mrpt_msgs::ObservationObject &_msg);
 
   private:  // functions
     ParametersNode* param();
@@ -86,10 +91,13 @@ class RawlogRecordNode : public RawlogRecord
     ros::Subscriber subBearing_;
     ros::Subscriber subOdometry_;
     tf::TransformListener listenerTF_;
+    
     mrpt::obs::CObservationBearingRange::Ptr last_bearing_range_;
     mrpt::obs::CObservationBeaconRanges::Ptr last_beacon_range_;
     mrpt::obs::CObservation2DRangeScan::Ptr  last_range_scan_;
     mrpt::obs::CObservationOdometry::Ptr last_odometry_;
+    mrpt::obs::CObservationObject::Ptr last_object_observation_;
+    
     unsigned int sync_attempts_sensor_frame_;
     std::map<std::string, mrpt::poses::CPose3D> static_tf_;
     ros::NodeHandle n_;

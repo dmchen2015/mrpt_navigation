@@ -67,6 +67,7 @@ class RawlogRecord
     bool record_range_scan;
     bool record_bearing_range;
     bool record_beacon_range;
+    bool record_object_observation;
     double bearing_range_std_range;
     double bearing_range_std_yaw;
     double bearing_range_std_pitch;
