@@ -35,6 +35,7 @@
 
 #include <mrpt_rawlog_record/rawlog_record.h>
 #include <mrpt_rawlog_record/rawlog_record_defaults.h>
+#include <mrpt/obs/CObservationObject.h>
 
 RawlogRecord::~RawlogRecord()
 {
@@ -42,6 +43,12 @@ RawlogRecord::~RawlogRecord()
 	MRPT_TODO("RawlogRecord writes the rawlog only on exit (Ctrl-C)");
 	log_info("pRawLog    entries %i", pRawLog->size());
 	log_info("pRawLogASF entries %i", pRawLogASF->size());
+  //if (entry)
+  //{
+  //  auto obs = entry->getObservationByClass<mrpt::obs::CObservationObject>();
+  //  if (obs)
+  //    std::cout << "has a CObservationObject" << std::endl;
+  //}
 	if (pRawLog->size() > 0)
 	{
 		std::string filename =

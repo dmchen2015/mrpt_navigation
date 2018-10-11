@@ -89,6 +89,7 @@ class RawlogRecordNode : public RawlogRecord
     ros::Subscriber subLaser_;
     ros::Subscriber subMarker_;
     ros::Subscriber subBearing_;
+    ros::Subscriber subObjects_;
     ros::Subscriber subOdometry_;
     tf::TransformListener listenerTF_;
     

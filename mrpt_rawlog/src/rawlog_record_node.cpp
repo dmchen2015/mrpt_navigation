@@ -77,6 +77,10 @@ void RawlogRecordNode::init()
         subMarker_ = n_.subscribe ( "marker", 1, &RawlogRecordNode::callbackMarker, this );
         subBearing_ = n_.subscribe( "bearing", 1, &RawlogRecordNode::callbackBearing, this );
     }
+    if (param_->record_object_observation)
+    {
+      	subObjects_ = n_.subscribe ("objects", 1, &RawlogRecordNode::callbackObjectObservation, this);
+    }
     subOdometry_ = n_.subscribe ( "odom", 1, &RawlogRecordNode::callbackOdometry, this );
 }
 
@@ -200,18 +204,18 @@ void RawlogRecordNode::callbackObjectObservation(const mrpt_msgs::ObservationObj
   	if(!last_object_observation_)
     {
       last_object_observation_ = CObservationObject::Create();
-      
-      mrpt::poses::CPose3D sensor_pose_on_robot;
-      
-      if (getStaticTF(_msg.header.frame_id, sensor_pose_on_robot))
-    	{
-    	    mrpt_bridge::convert(_msg, sensor_pose_on_robot, *last_object_observation_);
-    	    last_object_observation_->sensor_std_range = param_->bearing_range_std_range;
-    	    last_object_observation_->sensor_std_yaw = param_->bearing_range_std_yaw;
-    	    last_object_observation_->sensor_std_pitch = param_->bearing_range_std_pitch;
+    } 
+    
+    mrpt::poses::CPose3D sensor_pose_on_robot;
+    
+    if (getStaticTF(_msg.header.frame_id, sensor_pose_on_robot))
+    {
+       mrpt_bridge::convert(_msg, sensor_pose_on_robot, *last_object_observation_);
+       last_object_observation_->sensor_std_range = param_->bearing_range_std_range;
+       last_object_observation_->sensor_std_yaw = param_->bearing_range_std_yaw;
+       last_object_observation_->sensor_std_pitch = param_->bearing_range_std_pitch;
 
-    	    addObservation(_msg.header.stamp);
-    	}
+       addObservation(_msg.header.stamp);
     }
 }
 
@@ -287,12 +291,14 @@ void RawlogRecordNode::addObservation(const ros::Time& time) {
             ROS_WARN("odom - bearingrange timestamp difference greater than threshold %lf.", mrpt::system::timeDifference(last_odometry_->timestamp, last_object_observation_->timestamp));
             return;
         }
+        
         object_observation = CObservationObject::Create();
         *object_observation = *last_object_observation_;
         pRawLog->addObservationMemoryReference(object_observation);
+        
         if (param()->debug)
         {
-            ROS_INFO("RawLogRecordNode::addObservation: inserted bearing");
+            ROS_INFO("RawLogRecordNode::addObservation: inserted object");
         }
     }
     
@@ -309,7 +315,6 @@ void RawlogRecordNode::addObservation(const ros::Time& time) {
             ROS_INFO("RawLogRecordNode::addObservation: inserted beacon");
         }
     }
-
 
     static std::shared_ptr<mrpt::poses::CPose2D> lastOdomPose;
     if(!lastOdomPose) {
@@ -358,6 +363,7 @@ bool RawlogRecordNode::getStaticTF(std::string source_frame, mrpt::poses::CPose3
     std::string key = target_frame_id + "->" + source_frame_id;
     mrpt::poses::CPose3D pose;
     tf::StampedTransform transform;
+    
     if (param()->debug)
     {
         ROS_INFO("RawlogRecordNode::getStaticTF -> lookupTransform: %s", key.c_str());

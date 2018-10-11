@@ -16,6 +16,8 @@
   <node pkg="mrpt_object_converter" type="mrpt_object_converter_node" name="mrpt_object_converter_node" output="screen">
         <param name="base_frame_id" value="map"/>
         <param name="frame_id" value="/map"/> <!-- assume that the bearings are stored in robot space (as seen from robot) -->
+        <param name="world_frame" value="/map"/>
+        <param name="source_frame" value="/map"/>
         <param name="publisher_topic_name" value="$(arg bearing_topic_name)"/>
         <param name="subscriber_topic_name" value="$(arg object_detections_topic_name)"/>
         <param name="debug" type="bool" value="false"/>
