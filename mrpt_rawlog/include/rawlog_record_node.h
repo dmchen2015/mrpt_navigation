@@ -80,7 +80,7 @@ class RawlogRecordNode : public RawlogRecord
     void callbackMarker(const marker_msgs::MarkerDetection& );
     void callbackBearing(const mrpt_msgs::ObservationRangeBearing &);
     void callbackOdometry(const nav_msgs::Odometry&);
-		void callbackObjectObservation(const mrpt_msgs::ObservationObject &_msg);
+	void callbackObjectObservation(const mrpt_msgs::ObservationObject &_msg);
 
   private:  // functions
     ParametersNode* param();

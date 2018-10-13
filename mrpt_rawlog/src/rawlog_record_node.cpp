@@ -227,7 +227,9 @@ void RawlogRecordNode::addObservation(const ros::Time& time) {
     if(!last_odometry_)
     {
       return;
-    } else if(param()->ignore_timestamp_difference){
+    } 
+    else if(param()->ignore_timestamp_difference)
+    {
       last_odometry_->timestamp = mrpt::system::now();
     }
 
