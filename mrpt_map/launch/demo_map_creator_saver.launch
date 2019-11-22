@@ -7,7 +7,7 @@
   <node name="object_publisher_node" pkg="tuw_object_publisher" type="object_publisher_node" output="screen">
   </node>
  
-  <arg name="map_file" default="/home/felix/pCloudDrive/bag_files/map.yaml"/>
+  <arg name="map_file" default="$(find tuw_door_detection)/config/maps/roblab_all_rooms/refined/mapped_roblab_rooms.yaml"/>
   <arg name="bearing_topic_name" default="/bearing_gt"/>
   <arg name="object_detections_topic_name" default="/map_doors"/>
 
@@ -28,8 +28,8 @@
     <param name="frame_id" value="map"/>
     <param name="frequency" value="1"/>
     <!--<param name="ini_file" value="$(find mrpt_map)/tutorial/map.ini"/>-->
-    <param name="simplemap_file" value="$(find mrpt_map)/tutorial/constructed_map.multimetricmap"/>
-    <param name="bitmap_file" value="$(find mrpt_map)/tutorial/constructed_map.bmp"/>
+    <param name="simplemap_file" value="$(find mrpt_map)/tutorial/mapped_roblab_rooms_final.multimetricmap"/>
+    <param name="bitmap_file" value="$(find mrpt_map)/tutorial/mapped_roblab_rooms_final.bmp"/>
     <param name="ini_file" value="$(find mrpt_map)/tutorial/constructed_map.ini"/>
     <param name="load_map" type="bool" value="false"/>
     <param name="update_map" type="bool" value="true"/>

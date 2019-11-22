@@ -214,6 +214,7 @@ bool MapCreatorNode::getStaticTF(std::string source_frame, mrpt::poses::CPose3D 
   std::string target_frame_id = tf::resolve(param()->tf_prefix, param()->base_frame_id);
   std::string source_frame_id = source_frame;
   std::string key = target_frame_id + "->" + source_frame_id;
+  std::cout << key << std::endl;
   mrpt::poses::CPose3D pose;
   tf::StampedTransform transform;
 
